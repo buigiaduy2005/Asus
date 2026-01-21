@@ -22,3 +22,25 @@ Hệ thống phát hiện và ngăn chặn mối đe dọa nội bộ (USB, VPN,
    ```bash
    cd src/InsiderThreat.Server
    dotnet run
+
+3. **Quy trình làm việc cho từng thành viên**
+Mỗi khi bắt đầu code một tính năng mới, các thành viên cần thực hiện đúng các bước sau:
+
+Bước 1: Cập nhật code mới nhất
+Trước khi làm gì, hãy đảm bảo máy bạn có code mới nhất từ nhóm:
+
+git checkout develop
+git pull origin develop
+
+Bước 2: Tạo nhánh riêng để làm việc
+
+# Ví dụ thành viên C làm về USB
+git checkout -b feature/usb-detection
+
+Bước 3: Code và Lưu lại (Commit)
+Sau khi viết xong một chức năng (ví dụ: xong phần quét Serial USB):
+
+git add .
+git commit -m "Add: USB Serial scanning logic"
+git push origin feature/usb-detection
+
