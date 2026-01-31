@@ -23,7 +23,7 @@ function LoginPage() {
             if (response.user.role === 'Admin') {
                 navigate('/dashboard');
             } else {
-                navigate('/chat');
+                navigate('/feed');
             }
         } catch (error: any) {
             const errMsg = error.response?.data?.message || 'Đăng nhập thất bại! Kiểm tra lại tên đăng nhập và mật khẩu.';

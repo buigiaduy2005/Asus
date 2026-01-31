@@ -21,41 +21,41 @@ db.createCollection("Logs", {
       bsonType: "object",
       required: ["LogType", "Severity", "Message", "Timestamp"],
       properties: {
-        LogType: { 
+        LogType: {
           bsonType: "string",
           description: "Type of log: USB_INSERT, FACE_FAIL, VPN_DETECT, etc."
         },
-        Severity: { 
+        Severity: {
           bsonType: "string",
           enum: ["Info", "Warning", "Critical"],
           description: "Severity level"
         },
-        Message: { 
+        Message: {
           bsonType: "string",
           description: "Log message content"
         },
-        ComputerName: { 
+        ComputerName: {
           bsonType: "string",
           description: "Name of the client computer"
         },
-        IPAddress: { 
+        IPAddress: {
           bsonType: "string",
           description: "IP address of the client"
         },
-        ActionTaken: { 
+        ActionTaken: {
           bsonType: "string",
           enum: ["None", "Blocked", "Allowed", "Reported"],
           description: "Action taken by the system"
         },
-        DeviceId: { 
+        DeviceId: {
           bsonType: ["string", "null"],
           description: "USB Device ID (VID/PID/Serial)"
         },
-        DeviceName: { 
+        DeviceName: {
           bsonType: ["string", "null"],
           description: "Friendly name of the USB device"
         },
-        Timestamp: { 
+        Timestamp: {
           bsonType: "date",
           description: "When the log was created"
         }
@@ -77,23 +77,23 @@ db.createCollection("Devices", {
       bsonType: "object",
       required: ["Name", "DeviceId", "IsAllowed"],
       properties: {
-        Name: { 
+        Name: {
           bsonType: "string",
           description: "Device friendly name"
         },
-        DeviceId: { 
+        DeviceId: {
           bsonType: "string",
           description: "Full USB Device ID"
         },
-        IsAllowed: { 
+        IsAllowed: {
           bsonType: "bool",
           description: "Whether device is whitelisted"
         },
-        Description: { 
+        Description: {
           bsonType: ["string", "null"],
           description: "Additional notes about the device"
         },
-        CreatedAt: { 
+        CreatedAt: {
           bsonType: "date",
           description: "When device was added to whitelist"
         }
@@ -147,7 +147,7 @@ print("\n📋 Database Setup Summary:");
 print("===================================");
 print("Database: InsiderThreatDB");
 print("\nCollections:");
-db.getCollectionNames().forEach(function(col) {
+db.getCollectionNames().forEach(function (col) {
   print("  - " + col);
 });
 
@@ -156,4 +156,4 @@ print("Devices Collection Document Count: " + db.Devices.countDocuments({}));
 
 print("\n✅ InsiderThreatDB initialization complete!");
 print("\nConnection String for Compass:");
-print("mongodb://app_connect:Password%40123@192.168.192.129:27017/InsiderThreatDB?authSource=admin");
+print("mongodb://app_connect:123456@192.168.1.17:27017/InsiderThreatDB?authSource=admin");
