@@ -582,6 +582,50 @@ namespace InsiderThreat.Server.Controllers
             }
         }
 
+        // POST: api/SocialFeed/comments/{commentId}/react
+        [HttpPost("comments/{commentId}/react")]
+        public async Task<IActionResult> ReactToComment(string commentId, [FromBody] ReactRequest request)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+                var comment = await _comments.Find(c => c.Id == commentId).FirstOrDefaultAsync();
+                if (comment == null) return NotFound(new { message = "Comment not found" });
+
+                // Initialize if null
+                if (comment.Reactions == null) comment.Reactions = new Dictionary<string, List<string>>();
+
+                // Remove user from all existing reactions (one reaction per user)
+                foreach (var key in comment.Reactions.Keys.ToList())
+                {
+                    comment.Reactions[key].Remove(userId);
+                }
+
+                // Add to new type if provided
+                if (!string.IsNullOrEmpty(request.Type))
+                {
+                    if (!comment.Reactions.ContainsKey(request.Type))
+                        comment.Reactions[request.Type] = new List<string>();
+                    comment.Reactions[request.Type].Add(userId);
+                }
+
+                // Cleanup empty keys
+                var toRemove = comment.Reactions.Where(kvp => kvp.Value.Count == 0).Select(kvp => kvp.Key).ToList();
+                foreach (var k in toRemove) comment.Reactions.Remove(k);
+
+                var update = Builders<Comment>.Update.Set(c => c.Reactions, comment.Reactions);
+                await _comments.UpdateOneAsync(c => c.Id == commentId, update);
+
+                return Ok(new { success = true, reactions = comment.Reactions });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error reacting to comment", error = ex.Message });
+            }
+        }
+
         // GET: api/SocialFeed/search/posts?q={query}&category={category}&department={department}&dateFrom={date}&dateTo={date}
         [HttpGet("search/posts")]
         public async Task<ActionResult<SearchPostsResponse>> SearchPosts(

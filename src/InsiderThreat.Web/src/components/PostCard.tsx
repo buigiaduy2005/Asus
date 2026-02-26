@@ -19,11 +19,21 @@ const formatTimeAgo = (dateString: string) => {
     const diffHrs = Math.round(diffMs / 3600000);
     const diffDays = Math.round(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHrs < 24) return `${diffHrs}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
+    if (diffMins < 1) return 'Vừa xong';
+    if (diffMins < 60) return `${diffMins} phút trước`;
+    if (diffHrs < 24) return `${diffHrs} giờ trước`;
+    if (diffDays < 7) return `${diffDays} ngày trước`;
+    return date.toLocaleDateString('vi-VN');
+};
+
+const formatDateTime = (dateString: string) => {
+    const d = new Date(dateString);
+    const hh = d.getHours().toString().padStart(2, '0');
+    const mm = d.getMinutes().toString().padStart(2, '0');
+    const dd = d.getDate().toString().padStart(2, '0');
+    const mo = (d.getMonth() + 1).toString().padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${hh}:${mm} · ${dd}/${mo}/${yyyy}`;
 };
 
 const getPrivacyIcon = (privacy?: string) => {
@@ -34,9 +44,44 @@ const getPrivacyIcon = (privacy?: string) => {
     }
 };
 
-const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+// SVG Reaction Icons (Facebook-style)
+const ReactionSVGs: Record<string, React.ReactElement> = {
+    like: (
+        <svg viewBox="0 0 24 24" fill="#1877f2" width="22" height="22">
+            <path d="M14.5 2.25c-.69 0-1.375.275-1.875.825L7.75 8.25H4.5c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2h14.25c.9 0 1.675-.6 1.925-1.475l2-7.5c.325-1.2-.575-2.375-1.925-2.375H15.5V4.25c0-1.1-.9-2-2-2h-1zm-8 18H5v-9h1.5v9z" />
+        </svg>
+    ),
+    love: (
+        <svg viewBox="0 0 24 24" fill="#f63b4f" width="22" height="22">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
+    ),
+    haha: (
+        <svg viewBox="0 0 24 24" fill="#f7b928" width="22" height="22">
+            <circle cx="12" cy="12" r="10" />
+            <path fill="#fff" d="M8.5 10.5c.6 0 1-.4 1-1s-.4-1-1-1-1 .4-1 1 .4 1 1 1zm7 0c.6 0 1-.4 1-1s-.4-1-1-1-1 .4-1 1 .4 1 1 1zm-3.5 6c2.3 0 4.3-1.5 5-3.5H7c.7 2 2.7 3.5 5 3.5z" />
+        </svg>
+    ),
+    wow: (
+        <svg viewBox="0 0 24 24" fill="#f7b928" width="22" height="22">
+            <circle cx="12" cy="12" r="10" />
+            <path fill="#fff" d="M8.5 10c.6 0 1-.4 1-1s-.4-1-1-1-1 .4-1 1 .4 1 1 1zm7 0c.6 0 1-.4 1-1s-.4-1-1-1-1 .4-1 1 .4 1 1 1zm-3.5 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+        </svg>
+    ),
+    sad: (
+        <svg viewBox="0 0 24 24" fill="#f7b928" width="22" height="22">
+            <circle cx="12" cy="12" r="10" />
+            <path fill="#fff" d="M8.5 10c.6 0 1-.4 1-1s-.4-1-1-1-1 .4-1 1 .4 1 1 1zm7 0c.6 0 1-.4 1-1s-.4-1-1-1-1 .4-1 1 .4 1 1 1zm-3.5 7c2.3 0 4.3-1.5 5-3.5H7c.7 2 2.7 3.5 5 3.5z" transform="rotate(180 12 14)" />
+        </svg>
+    ),
+    angry: (
+        <svg viewBox="0 0 24 24" fill="#e66c24" width="22" height="22">
+            <circle cx="12" cy="12" r="10" />
+            <path fill="#fff" d="M7 9l2.5 1.5m5-1.5L12 10.5M9 16c.7-1 2-1.5 3-1.5s2.3.5 3 1.5H9z" />
+        </svg>
+    ),
 };
+const reactionLabelsVI: Record<string, string> = { like: 'Thích', love: 'Yêu thích', haha: 'Haha', wow: 'Wow', sad: 'Buồn', angry: 'Phẫn nộ' };
 
 export default function PostCard({ post, currentUser, onPostUpdated, onPostDeleted }: PostCardProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -47,6 +92,23 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
     const [newComment, setNewComment] = useState('');
     const [isLikeAnimating, setIsLikeAnimating] = useState(false);
     const [localPost, setLocalPost] = useState(post);
+
+    // Reaction Users Modal
+    const [showReactionsModal, setShowReactionsModal] = useState(false);
+    const [reactionUsers, setReactionUsers] = useState<{ id: string; name: string; avatar: string; department?: string; reactionType: string }[]>([]);
+    const [reactionFilter, setReactionFilter] = useState<string>('all');
+
+    // Comment image
+    const commentFileRef = useRef<HTMLInputElement>(null);
+    const commentInputRef = useRef<HTMLInputElement>(null);
+    const [commentFile, setCommentFile] = useState<File | null>(null);
+    const [commentPreviewUrl, setCommentPreviewUrl] = useState<string | null>(null);
+    const [replyToCommentId, setReplyToCommentId] = useState<string | null>(null);
+    const [replyToAuthorName, setReplyToAuthorName] = useState<string>('');
+
+    // Comment reactions: { [commentId]: { [type]: count } }
+    const [commentReactions, setCommentReactions] = useState<Record<string, Record<string, number>>>({});
+    const [myCommentReactions, setMyCommentReactions] = useState<Record<string, string>>({}); // commentId -> reactionType
 
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -204,6 +266,20 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
             try {
                 const fetched = await feedService.getComments(localPost.id);
                 setComments(fetched);
+                // Init reaction state from server data
+                const rMap: Record<string, Record<string, number>> = {};
+                const myMap: Record<string, string> = {};
+                fetched.forEach(c => {
+                    if (c.reactions) {
+                        rMap[c.id] = Object.fromEntries(
+                            Object.entries(c.reactions).map(([t, ids]) => [t, ids.length])
+                        );
+                        const found = Object.entries(c.reactions).find(([, ids]) => ids.includes(currentUser?.id || ''));
+                        if (found) myMap[c.id] = found[0];
+                    }
+                });
+                setCommentReactions(rMap);
+                setMyCommentReactions(myMap);
             } catch (e) {
                 console.error(e);
             }
@@ -211,12 +287,23 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
     };
 
     const handleAddComment = async () => {
-        if (!newComment.trim()) return;
+        if (!newComment.trim() && !commentFile) return;
         try {
-            const added = await feedService.addComment(localPost.id, newComment);
+            let content = newComment;
+            if (commentFile) {
+                try {
+                    const uploadResult = await feedService.uploadFile(commentFile);
+                    content = newComment ? `${newComment}\n![img](${uploadResult.url})` : `![img](${uploadResult.url})`;
+                } catch { /* ignore upload error, send text only */ }
+            }
+            const added = await feedService.addComment(localPost.id, content, replyToCommentId || undefined);
             const updatedComments = [...comments, added];
             setComments(updatedComments);
             setNewComment('');
+            setCommentFile(null);
+            setCommentPreviewUrl(null);
+            setReplyToCommentId(null);
+            setReplyToAuthorName('');
 
             const updatedPost = { ...localPost, commentCount: localPost.commentCount + 1 };
             setLocalPost(updatedPost);
@@ -224,6 +311,82 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
         } catch (e) {
             console.error(e);
         }
+    };
+
+    const handleCommentReact = async (commentId: string, type: string) => {
+        const currentType = myCommentReactions[commentId];
+        const newType = currentType === type ? '' : type;
+        // Optimistic update
+        setMyCommentReactions(prev => ({ ...prev, [commentId]: newType }));
+        setCommentReactions(prev => {
+            const curr = { ...(prev[commentId] || {}) };
+            if (currentType) curr[currentType] = Math.max(0, (curr[currentType] || 1) - 1);
+            if (newType) curr[newType] = (curr[newType] || 0) + 1;
+            return { ...prev, [commentId]: curr };
+        });
+        try {
+            const res = await feedService.reactToComment(commentId, newType);
+            if (res.success) {
+                const serverCount = Object.fromEntries(
+                    Object.entries(res.reactions).map(([t, ids]) => [t, (ids as string[]).length])
+                );
+                setCommentReactions(prev => ({ ...prev, [commentId]: serverCount }));
+                const myR = Object.entries(res.reactions).find(([, ids]) => (ids as string[]).includes(currentUser?.id || ''));
+                setMyCommentReactions(prev => ({ ...prev, [commentId]: myR?.[0] || '' }));
+            }
+        } catch (e) {
+            console.error('Comment react failed', e);
+        }
+    };
+
+
+    const handleReply = (comment: Comment) => {
+        setReplyToCommentId(comment.parentCommentId ? comment.parentCommentId : comment.id);
+        setReplyToAuthorName(comment.authorName);
+        const text = `@${comment.authorName} `;
+        setNewComment(text);
+        setTimeout(() => {
+            const input = commentInputRef.current;
+            if (input) {
+                input.focus();
+                input.setSelectionRange(text.length, text.length);
+            }
+        }, 50);
+    };
+
+    const handleCommentFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setCommentFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => setCommentPreviewUrl(reader.result as string);
+        reader.readAsDataURL(file);
+    };
+
+    const fetchReactionUsers = async () => {
+        // Build list from reactions dict using authorId stored in post
+        const entries: { id: string; name: string; avatar: string; department?: string; reactionType: string }[] = [];
+        const reactions = localPost.reactions || {};
+        // We can map locally since we only have IDs — show what we have
+        for (const [type, ids] of Object.entries(reactions)) {
+            for (const id of ids) {
+                entries.push({ id, name: id, avatar: `https://i.pravatar.cc/40?u=${id}`, reactionType: type });
+            }
+        }
+        // Try to fetch actual user info
+        try {
+            const resp = await fetch(`${API_BASE_URL}/api/users`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+            const users: any[] = await resp.json();
+            const mapped = entries.map(e => {
+                const u = users.find((u: any) => u.id === e.id || u._id === e.id);
+                return u ? { ...e, name: u.fullName || u.username, avatar: u.avatarUrl ? `${API_BASE_URL}${u.avatarUrl}` : e.avatar, department: u.department } : e;
+            });
+            setReactionUsers(mapped);
+        } catch {
+            setReactionUsers(entries);
+        }
+        setShowReactionsModal(true);
+        setReactionFilter('all');
     };
 
     const isSaved = localPost.savedBy?.includes(currentUser?.id || '');
@@ -257,9 +420,11 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
                             {localPost.authorName}
                         </Link>
                         <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 border border-slate-200">
-                                {formatDate(localPost.createdAt)}
+                            <span className="text-[11px] text-slate-500" title={formatDateTime(localPost.createdAt)}>
+                                {formatTimeAgo(localPost.createdAt)}
                             </span>
+                            <span className="text-[10px] text-slate-300">·</span>
+                            <span className="text-[10px] text-slate-400">{formatDateTime(localPost.createdAt).split('·')[0].trim()}</span>
 
                             {/* Category Badge */}
                             {localPost.category && localPost.category !== 'General' && (
@@ -410,87 +575,71 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
                 <div className="flex items-center gap-1">
                     {(() => {
                         const types = ['like', 'love', 'haha', 'wow', 'sad', 'angry'];
-                        const icons: Record<string, string> = { 'like': '👍', 'love': '❤️', 'haha': '😂', 'wow': '😮', 'sad': '😢', 'angry': '😡' };
-
                         const activeKeyStats = types
                             .map(t => ({ type: t, count: localPost.reactions?.[t]?.length || 0 }))
                             .filter(x => x.count > 0)
                             .sort((a, b) => b.count - a.count);
+                        const totalCount = Object.values(localPost.reactions || {}).flat().length;
 
                         if (activeKeyStats.length > 0) {
                             return (
-                                <div className="flex items-center gap-1">
-                                    <div className="flex -space-x-2">
+                                <button className="flex items-center gap-1 hover:underline" onClick={fetchReactionUsers}>
+                                    <div className="flex -space-x-1">
                                         {activeKeyStats.slice(0, 3).map(stat => (
-                                            <span key={stat.type} className="w-5 h-5 flex items-center justify-center bg-white rounded-full border border-slate-200 text-xs z-10" title={stat.type}>
-                                                {icons[stat.type]}
+                                            <span key={stat.type} className="w-5 h-5 flex items-center justify-center bg-white rounded-full border border-slate-100 z-10">
+                                                {ReactionSVGs[stat.type]}
                                             </span>
                                         ))}
                                     </div>
-                                    <span className="text-slate-500 text-sm hover:underline cursor-pointer ml-1">
-                                        {Object.values(localPost.reactions || {}).flat().length}
-                                    </span>
-                                </div>
+                                    <span className="text-slate-500 text-sm ml-1 hover:text-slate-800">{totalCount}</span>
+                                </button>
                             );
                         }
-
-                        // Fallback for legacy data if no dictionary reactions but has likedBy
                         if (localPost.likedBy && localPost.likedBy.length > 0) {
                             return (
-                                <span className="flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-sm text-[#137fec]">thumb_up</span>
-                                    {localPost.likedBy.length} Likes
-                                </span>
+                                <button className="flex items-center gap-1 hover:underline" onClick={fetchReactionUsers}>
+                                    <span className="w-5 h-5">{ReactionSVGs.like}</span>
+                                    <span className="text-slate-500 text-sm">{localPost.likedBy.length}</span>
+                                </button>
                             );
                         }
                         return null;
                     })()}
                 </div>
-                <span onClick={toggleComments} className="hover:underline cursor-pointer">{localPost.commentCount || 0} Comments</span>
+                <span onClick={toggleComments} className="hover:underline cursor-pointer text-sm text-slate-500">{localPost.commentCount || 0} bình luận</span>
             </div>
 
             <div className="post-actions-bar relative">
                 <div className="group relative">
                     <button
                         onClick={handleLike}
-                        className={`post-action-btn ${CurrentReactionColor} ${isLikeAnimating ? 'animate-pulse' : ''}`}
+                        className={`post-action-btn ${CurrentReactionColor} ${isLikeAnimating ? 'scale-110' : ''} transition-transform`}
                     >
-                        {myReaction ? (
-                            <span className="text-lg leading-none mr-1">{CurrentReactionIcon}</span>
-                        ) : (
-                            <span className="material-symbols-outlined">thumb_up</span>
-                        )}
-                        {CurrentReactionLabel}
+                        {myReaction
+                            ? <span className="w-5 h-5 flex items-center">{ReactionSVGs[myReaction]}</span>
+                            : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="20" height="20"><path d="M14.5 2.25c-.69 0-1.375.275-1.875.825L7.75 8.25H4.5c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2h14.25c.9 0 1.675-.6 1.925-1.475l2-7.5c.325-1.2-.575-2.375-1.925-2.375H15.5V4.25c0-1.1-.9-2-2-2h-1z" /></svg>
+                        }
+                        <span className="ml-1">{myReaction ? (reactionLabelsVI[myReaction] || 'Thích') : 'Thích'}</span>
                     </button>
-                    {/* Reaction Popup */}
-                    <div className="absolute bottom-full left-0 pb-2 hidden group-hover:block z-20 w-max">
-                        <div className="flex bg-white rounded-full p-1 shadow-lg border border-slate-200 gap-1 animate-in fade-in zoom-in duration-200 origin-bottom-left">
-                            {['👍', '❤️', '😂', '😮', '😢', '😡'].map(emoji => (
+                    {/* Reaction Popup — SVG icons */}
+                    <div className="absolute bottom-full left-0 pb-2 hidden group-hover:flex z-20">
+                        <div className="flex bg-white rounded-full px-2 py-1.5 shadow-xl border border-slate-100 gap-2">
+                            {(['like', 'love', 'haha', 'wow', 'sad', 'angry'] as const).map(type => (
                                 <button
-                                    key={emoji}
+                                    key={type}
+                                    title={reactionLabelsVI[type]}
                                     onClick={async (e) => {
                                         e.stopPropagation();
-                                        const typeMap: Record<string, string> = { '👍': 'like', '❤️': 'love', '😂': 'haha', '😮': 'wow', '😢': 'sad', '😡': 'angry' };
-                                        const type = typeMap[emoji];
-
                                         const res = await feedService.reactToPost(localPost.id, type);
                                         if (res.success) {
-                                            const updatedReactions = res.reactions;
-
-                                            // Clear legacy local
-                                            let updatedLikedBy = localPost.likedBy || [];
-                                            if (currentUser?.id) {
-                                                updatedLikedBy = updatedLikedBy.filter(id => id !== currentUser.id);
-                                            }
-
-                                            const updated = { ...localPost, reactions: updatedReactions, likedBy: updatedLikedBy };
-                                            setLocalPost(updated);
-                                            onPostUpdated(updated);
+                                            let updatedLikedBy = (localPost.likedBy || []).filter(id => id !== currentUser?.id);
+                                            setLocalPost({ ...localPost, reactions: res.reactions, likedBy: updatedLikedBy });
+                                            onPostUpdated({ ...localPost, reactions: res.reactions, likedBy: updatedLikedBy });
                                         }
                                     }}
-                                    className="hover:scale-125 transition-transform p-1 text-lg"
+                                    className="hover:scale-125 transition-all duration-150 w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-50"
                                 >
-                                    {emoji}
+                                    {ReactionSVGs[type]}
                                 </button>
                             ))}
                         </div>
@@ -510,34 +659,198 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
                 </button>
             </div>
 
-            {showComments && (
-                <div className="post-comments-section p-4 bg-slate-50 border-t border-slate-200">
-                    <div className="flex gap-2 mb-4">
-                        <input
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
-                            placeholder="Write a comment..."
-                            className="flex-1 bg-white border border-slate-200 rounded-full px-4 py-2 text-sm text-slate-900 focus:outline-none focus:border-[var(--color-primary)]"
-                        />
-                        <button onClick={handleAddComment} disabled={!newComment.trim()} className="text-[#3b82f6] disabled:text-gray-500">
-                            <span className="material-symbols-outlined">send</span>
-                        </button>
-                    </div>
+            {showComments && (() => {
+                const rootComments = comments.filter(c => !c.parentCommentId);
+                const getReplies = (cid: string) => comments.filter(c => c.parentCommentId === cid);
 
-                    <div className="flex flex-col gap-3">
-                        {comments.map(comment => (
-                            <div key={comment.id} className="comment flex gap-3">
-                                <div className="user-avatar w-8 h-8 min-w-8" style={{ backgroundImage: `url(${getAvatarUrl(comment.authorAvatarUrl || '')})` }}></div>
-                                <div className="flex-1">
-                                    <div className="comment-content bg-slate-100 rounded-2xl px-3 py-2 inline-block max-w-full">
-                                        <div className="font-bold text-xs text-slate-800 mb-0.5">{comment.authorName}</div>
-                                        <div className="text-sm text-slate-700">{comment.content}</div>
-                                    </div>
-                                    <div className="text-[10px] text-slate-400 mt-1 ml-2">{formatTimeAgo(comment.createdAt)}</div>
-                                </div>
+                const renderComment = (comment: Comment, isReply = false) => {
+                    const myRType = myCommentReactions[comment.id];
+                    const reactions = commentReactions[comment.id] || {};
+                    const totalReactions = Object.values(reactions).reduce((a, b) => a + b, 0);
+                    const topReactionTypes = Object.entries(reactions).filter(([, c]) => c > 0).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([t]) => t);
+                    const replies = getReplies(comment.id);
+
+                    return (
+                        <div key={comment.id} className={`flex gap-2 ${isReply ? '' : ''}`}>
+                            <div className={`rounded-full bg-slate-200 overflow-hidden flex-shrink-0 ${isReply ? 'w-7 h-7' : 'w-8 h-8'}`}>
+                                <img src={getAvatarUrl(comment.authorAvatarUrl || '')} alt="" className="w-full h-full object-cover" />
                             </div>
-                        ))}
+                            <div className="flex-1 min-w-0">
+                                {/* Comment bubble */}
+                                <div className="relative inline-block max-w-full">
+                                    <div className="bg-white rounded-2xl px-3 py-2 border border-slate-100 shadow-sm">
+                                        <Link to={`/profile/${comment.authorId || ''}`} className="font-semibold text-xs text-slate-800 hover:underline block mb-0.5">{comment.authorName}</Link>
+                                        {comment.content.includes('![img](') ? (
+                                            <>
+                                                <p className="text-sm text-slate-700 whitespace-pre-line">{comment.content.replace(/\n?!\[img\]\([^)]+\)/g, '').trim()}</p>
+                                                {(() => {
+                                                    const match = comment.content.match(/!\[img\]\(([^)]+)\)/);
+                                                    return match ? <img src={`${API_BASE_URL}${match[1]}`} alt="" className="mt-1 rounded-xl max-h-40 object-cover" /> : null;
+                                                })()}
+                                            </>
+                                        ) : (
+                                            <p className="text-sm text-slate-700 whitespace-pre-line">{comment.content}</p>
+                                        )}
+                                    </div>
+                                    {/* Reaction count badge on bubble */}
+                                    {totalReactions > 0 && (
+                                        <div className="absolute -bottom-2.5 right-2 flex items-center gap-0.5 bg-white border border-slate-100 rounded-full px-1.5 py-0.5 shadow-sm">
+                                            {topReactionTypes.map(t => <span key={t} className="w-3.5 h-3.5">{ReactionSVGs[t]}</span>)}
+                                            <span className="text-[10px] text-slate-500 ml-0.5">{totalReactions}</span>
+                                        </div>
+                                    )}
+                                </div>
+                                {/* Actions */}
+                                <div className="flex items-center gap-3 mt-2 ml-2">
+                                    <span className="text-[11px] text-slate-400">{formatTimeAgo(comment.createdAt)}</span>
+                                    {/* Like with mini popup */}
+                                    <div className="group relative">
+                                        {(() => {
+                                            const rColors: Record<string, string> = { like: 'text-[#137fec]', love: 'text-[#f63b4f]', haha: 'text-[#f7b928]', wow: 'text-[#f7b928]', sad: 'text-[#f7b928]', angry: 'text-[#e66c24]' };
+                                            return (
+                                                <button
+                                                    className={`flex items-center gap-1 text-[11px] font-semibold transition-colors ${myRType ? (rColors[myRType] || 'text-blue-600') : 'text-slate-500 hover:text-blue-600'}`}
+                                                    onClick={() => handleCommentReact(comment.id, myRType ? '' : 'like')}
+                                                >
+                                                    {myRType
+                                                        ? <span className="w-4 h-4 flex items-center">{ReactionSVGs[myRType]}</span>
+                                                        : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14"><path d="M14.5 2.25c-.69 0-1.375.275-1.875.825L7.75 8.25H4.5c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2h14.25c.9 0 1.675-.6 1.925-1.475l2-7.5c.325-1.2-.575-2.375-1.925-2.375H15.5V4.25c0-1.1-.9-2-2-2h-1z" /></svg>
+                                                    }
+                                                    {myRType ? (reactionLabelsVI[myRType] || 'Thích') : 'Thích'}
+                                                </button>
+                                            );
+                                        })()}
+                                        {/* Mini reaction popup */}
+                                        <div className="absolute bottom-full left-0 pb-1 hidden group-hover:flex z-20">
+                                            <div className="flex bg-white rounded-full px-1.5 py-1 shadow-xl border border-slate-100 gap-1">
+                                                {(['like', 'love', 'haha', 'wow', 'sad', 'angry'] as const).map(type => (
+                                                    <button key={type} title={reactionLabelsVI[type]}
+                                                        onClick={() => handleCommentReact(comment.id, type)}
+                                                        className="hover:scale-125 transition-all duration-150 w-7 h-7 flex items-center justify-center">
+                                                        <span className="w-5 h-5">{ReactionSVGs[type]}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        className="text-[11px] text-slate-500 hover:text-blue-600 font-semibold transition-colors"
+                                        onClick={() => handleReply(comment)}
+                                    >
+                                        Phản hồi
+                                    </button>
+                                    <span className="text-[11px] text-slate-400">{formatDateTime(comment.createdAt).split('·')[0].trim()}</span>
+                                </div>
+
+                                {/* Nested replies */}
+                                {replies.length > 0 && (
+                                    <div className="mt-3 flex flex-col gap-3 pl-2 border-l-2 border-slate-100">
+                                        {replies.map(r => renderComment(r, true))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                };
+
+                return (
+                    <div className="post-comments-section p-4 bg-slate-50 border-t border-slate-200">
+                        {/* Comment Input */}
+                        <div className="flex flex-col gap-2 mb-4">
+                            {/* Reply indicator */}
+                            {replyToCommentId && (
+                                <div className="flex items-center gap-2 bg-blue-50 text-blue-600 text-xs px-3 py-1.5 rounded-lg">
+                                    <span className="material-symbols-outlined text-sm">reply</span>
+                                    <span>Đang phản hồi <strong>{replyToAuthorName}</strong></span>
+                                    <button onClick={() => { setReplyToCommentId(null); setReplyToAuthorName(''); setNewComment(''); }} className="ml-auto text-blue-400 hover:text-blue-600">×</button>
+                                </div>
+                            )}
+                            {/* Image preview */}
+                            {commentPreviewUrl && (
+                                <div className="flex gap-2 p-2 bg-white rounded-xl border border-dashed border-slate-200">
+                                    <div className="relative w-16 h-16 rounded-lg overflow-hidden group flex-shrink-0">
+                                        <img src={commentPreviewUrl} alt="preview" className="w-full h-full object-cover" />
+                                        <button onClick={() => { setCommentFile(null); setCommentPreviewUrl(null); }}
+                                            className="absolute top-0.5 right-0.5 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                                            ×
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                            <div className="flex gap-2">
+                                <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
+                                    <img src={getAvatarUrl(currentUser)} alt="" className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1 flex items-center bg-white border border-slate-200 rounded-full px-3 gap-2 focus-within:border-blue-300 transition-colors">
+                                    <input
+                                        ref={commentInputRef}
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleAddComment()}
+                                        placeholder={replyToCommentId ? `Phản hồi ${replyToAuthorName}...` : 'Viết bình luận...'}
+                                        className="flex-1 bg-transparent py-2 text-sm text-slate-900 focus:outline-none placeholder:text-slate-400"
+                                    />
+                                    <input type="file" ref={commentFileRef} onChange={handleCommentFileSelect} accept="image/*" style={{ display: 'none' }} />
+                                    <button onClick={() => commentFileRef.current?.click()} className="text-slate-400 hover:text-green-500 transition-colors p-1">
+                                        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" /></svg>
+                                    </button>
+                                </div>
+                                <button onClick={handleAddComment} disabled={!newComment.trim() && !commentFile} className="text-blue-500 disabled:text-gray-300 transition-colors">
+                                    <span className="material-symbols-outlined">send</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Threaded Comments */}
+                        <div className="flex flex-col gap-4">
+                            {rootComments.map(c => renderComment(c, false))}
+                        </div>
+                    </div>
+                );
+            })()}
+
+
+            {/* Reaction Users Modal */}
+            {showReactionsModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowReactionsModal(false)}>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                            <h3 className="font-bold text-slate-900">Cảm xúc</h3>
+                            <button onClick={() => setShowReactionsModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-lg">×</button>
+                        </div>
+                        {/* Reaction filter tabs */}
+                        <div className="flex gap-1 px-4 pt-3 pb-2 overflow-x-auto">
+                            {['all', 'like', 'love', 'haha', 'wow', 'sad', 'angry'].map(f => {
+                                const count = f === 'all' ? reactionUsers.length : reactionUsers.filter(u => u.reactionType === f).length;
+                                if (count === 0 && f !== 'all') return null;
+                                return (
+                                    <button key={f} onClick={() => setReactionFilter(f)}
+                                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${reactionFilter === f ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'text-slate-500 hover:bg-slate-50'
+                                            }`}>
+                                        {f !== 'all' && <span className="w-4 h-4">{ReactionSVGs[f]}</span>}
+                                        {f === 'all' ? `Tất cả ${count}` : count}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <div className="max-h-80 overflow-y-auto px-4 pb-4">
+                            {reactionUsers.filter(u => reactionFilter === 'all' || u.reactionType === reactionFilter).map((u, i) => (
+                                <div key={i} className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">
+                                    <div className="relative">
+                                        <img src={u.avatar} alt={u.name} className="w-10 h-10 rounded-full object-cover" />
+                                        <span className="absolute -bottom-1 -right-1 w-5 h-5">{ReactionSVGs[u.reactionType]}</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="font-semibold text-slate-900 text-sm">{u.name}</div>
+                                        {u.department && <div className="text-xs text-slate-500">{u.department}</div>}
+                                    </div>
+                                    <Link to={`/profile/${u.id}`} onClick={() => setShowReactionsModal(false)}
+                                        className="text-xs text-blue-600 hover:text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors font-medium">
+                                        Hồ sơ
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}

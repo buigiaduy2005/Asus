@@ -79,6 +79,12 @@ export const feedService = {
         return api.post<Comment>(`/api/SocialFeed/posts/${postId}/comments`, { content, parentCommentId });
     },
 
+    reactToComment: async (commentId: string, type: string) => {
+        return api.post<{ success: boolean; reactions: Record<string, string[]> }>(
+            `/api/SocialFeed/comments/${commentId}/react`, { type }
+        );
+    },
+
     deletePost: async (postId: string) => {
         return api.delete(`/api/SocialFeed/posts/${postId}`);
     },
