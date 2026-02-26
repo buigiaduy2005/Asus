@@ -34,6 +34,9 @@ namespace InsiderThreat.Server.Models
         [BsonElement("likedBy")]
         public List<string> LikedBy { get; set; } = new List<string>();
 
+        [BsonElement("reactions")]
+        public Dictionary<string, List<string>> Reactions { get; set; } = new Dictionary<string, List<string>>();
+
         [BsonElement("createdAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

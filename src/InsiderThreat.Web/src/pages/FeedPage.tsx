@@ -69,6 +69,21 @@ export default function FeedPage() {
     const [showWarning, setShowWarning] = useState(false);
     const [warningMessage, setWarningMessage] = useState('');
 
+    // Post Modal State
+    const [showPostModal, setShowPostModal] = useState(false);
+    const [postBgColor, setPostBgColor] = useState<string | null>(null);
+
+    const BG_COLORS = [
+        null,
+        'linear-gradient(135deg,#f857a4,#ff5858)',
+        'linear-gradient(135deg,#4facfe,#00f2fe)',
+        'linear-gradient(135deg,#43e97b,#38f9d7)',
+        'linear-gradient(135deg,#e0e0e0,#f5f5f5)',
+        '#1a1a2e',
+        'linear-gradient(135deg,#1e40af,#3b82f6)',
+        'linear-gradient(135deg,#f7971e,#ffd200)',
+    ];
+
 
     // Detect hash for focused post (from notification)
     useEffect(() => {
@@ -318,104 +333,213 @@ export default function FeedPage() {
                             </div>
                         </div>
 
-                        {/* Create Post */}
-                        <div className="bg-white rounded-2xl p-6 border border-[var(--color-border)] shadow-sm">
-                            <textarea
-                                className="w-full bg-slate-50 text-slate-900 rounded-xl p-4 resize-none border border-[var(--color-border)] focus:border-[var(--color-primary)] focus:outline-none transition-colors placeholder:text-slate-400"
-                                placeholder={`What's on your mind, ${user?.fullName || user?.username}?`}
-                                value={newPostContent}
-                                onChange={(e) => setNewPostContent(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleCreatePost()}
-                            />
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className="user-avatar" style={{ backgroundImage: `url(${getAvatarUrl(user)})`, width: 40, height: 40, minWidth: 40, borderRadius: '50%', backgroundSize: 'cover' }}></div>
-                                <input
-                                    className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl h-12 px-6 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none transition-all"
-                                    placeholder={`What's on your mind?`}
-                                    value={newPostContent}
-                                    onChange={(e) => setNewPostContent(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleCreatePost()}
-                                />
-                                <button
-                                    onClick={handleCreatePost}
-                                    disabled={(!newPostContent.trim() && !selectedFile) || isPosting}
-                                    className="bg-[var(--color-primary)] text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-[var(--color-primary-hover)] disabled:opacity-50 transition-colors"
-                                >
-                                    {isPosting ? 'Posting...' : 'Post'}
-                                </button>
-                            </div>
-
-                            {/* Image Preview */}
-                            {previewUrl && (
-                                <div className="relative mb-4 rounded-lg overflow-hidden border border-[var(--color-border)]">
-                                    <img src={previewUrl} alt="Preview" className="w-full max-h-[300px] object-cover" />
-                                    <button
-                                        onClick={removeSelectedFile}
-                                        className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
-                                    >
-                                        <span className="material-symbols-outlined text-sm">close</span>
-                                    </button>
-                                </div>
-                            )}
-
-                            <div className="flex items-center gap-4 border-t border-[var(--color-border)] pt-3 justify-between">
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        onChange={handleFileSelect}
-                                        accept="image/*,video/*,application/pdf"
-                                        style={{ display: 'none' }}
-                                    />
-                                    <button className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-white px-3 py-2 rounded-lg hover:bg-[var(--color-dark-surface-lighter)] transition-colors" onClick={() => fileInputRef.current?.click()}>
-                                        <span className="material-symbols-outlined text-green-500">attach_file</span> Media
-                                    </button>
-
-                                </div>
-
-                                {/* Visibility Selector */}
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[var(--color-text-muted)] text-sm">To:</span>
-                                    <select
-                                        className="bg-slate-50 text-slate-800 text-sm border border-slate-200 rounded-lg px-2 py-2 focus:outline-none focus:border-[var(--color-primary)] max-w-[120px]"
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            setAllowedRoles([]);
-                                            setAllowedDepartments([]);
-
-                                            if (val === 'Public') {
-                                                // Default: All empty
-                                            } else if (val === 'Managers') {
-                                                setAllowedRoles(['Manager', 'Admin']);
-                                            } else if (DEPARTMENTS.includes(val)) {
-                                                setAllowedDepartments([val]);
-                                            }
-                                        }}
-                                    >
-                                        <option value="Public">Everyone</option>
-                                        <option value="Managers">Managers Only</option>
-                                        <optgroup label="Departments">
-                                            {DEPARTMENTS.map(dept => (
-                                                <option key={dept} value={dept}>{dept} Dept</option>
-                                            ))}
-                                        </optgroup>
-                                    </select>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[var(--color-text-muted)] text-sm">Tag:</span>
-                                    <select
-                                        className="bg-slate-50 text-slate-800 text-sm border border-slate-200 rounded-lg px-2 py-2 focus:outline-none focus:border-[var(--color-primary)]"
-                                        value={selectedCategory}
-                                        onChange={(e) => setSelectedCategory(e.target.value)}
-                                    >
-                                        {POST_CATEGORIES.map(cat => (
-                                            <option key={cat} value={cat}>{cat}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                        {/* Create Post — Click to open modal */}
+                        <div className="bg-white rounded-2xl border border-[var(--color-border)] shadow-sm px-4 py-3 flex items-center gap-3 cursor-pointer" onClick={() => setShowPostModal(true)}>
+                            <div className="flex-shrink-0" style={{
+                                backgroundImage: `url(${getAvatarUrl(user)})`,
+                                width: 42, height: 42, minWidth: 42,
+                                borderRadius: '50%', backgroundSize: 'cover',
+                                border: '2px solid #e2e8f0'
+                            }} />
+                            <div className="flex-1 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full h-10 flex items-center px-4 text-slate-400 text-[15px] select-none">
+                                {user?.fullName?.split(' ').pop() || user?.username} ơi, bạn đang nghĩ gì?
                             </div>
                         </div>
+
+                        {/* Post Creation Modal */}
+                        {showPostModal && (
+                            <div
+                                className="fixed inset-0 z-50 flex items-center justify-center"
+                                style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+                                onClick={(e) => e.target === e.currentTarget && setShowPostModal(false)}
+                            >
+                                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[520px] mx-4 flex flex-col overflow-hidden" style={{ maxHeight: '90vh' }}>
+                                    {/* Modal Header */}
+                                    <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                                        <h2 className="text-lg font-bold text-slate-900">TẠO BÀI VIẾT</h2>
+                                        <button
+                                            onClick={() => { setShowPostModal(false); setNewPostContent(''); setPostBgColor(null); removeSelectedFile(); }}
+                                            className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-slate-600 text-xl font-bold"
+                                        >×</button>
+                                    </div>
+
+                                    {/* User Info */}
+                                    <div className="flex items-center gap-3 px-5 pt-4">
+                                        <div style={{
+                                            backgroundImage: `url(${getAvatarUrl(user)})`,
+                                            width: 48, height: 48, minWidth: 48,
+                                            borderRadius: '50%', backgroundSize: 'cover',
+                                            border: '2px solid #e2e8f0'
+                                        }} />
+                                        <div>
+                                            <div className="font-semibold text-slate-900 text-[15px]">{user?.fullName || user?.username}</div>
+                                            <div className="inline-flex items-center gap-1 bg-blue-50 text-blue-600 text-[11px] font-bold px-2 py-0.5 rounded-md mt-0.5">
+                                                🌐 CÔNG KHAI
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Text Area — changes by mode */}
+                                    <div
+                                        className="flex-1 mx-5 mt-4 mb-3 rounded-2xl overflow-hidden flex items-center justify-center transition-all duration-300"
+                                        style={{
+                                            background: !previewUrl ? (postBgColor || 'transparent') : 'transparent',
+                                            minHeight: !previewUrl && postBgColor ? 180 : 120,
+                                        }}
+                                    >
+                                        <textarea
+                                            autoFocus
+                                            className="w-full bg-transparent resize-none border-none focus:ring-0 outline-none transition-all duration-300 placeholder:text-slate-400/70"
+                                            style={{
+                                                // Caption mode (with image): simple left-aligned text
+                                                // Color mode: big centered bold text
+                                                // Default: medium centered text
+                                                textAlign: previewUrl ? 'left' : 'center',
+                                                fontSize: previewUrl
+                                                    ? 15
+                                                    : postBgColor
+                                                        ? (newPostContent.length > 80 ? 18 : newPostContent.length > 40 ? 22 : 26)
+                                                        : 17,
+                                                fontWeight: postBgColor && !previewUrl ? 600 : 500,
+                                                color: postBgColor && !previewUrl ? '#fff' : '#334155',
+                                                padding: previewUrl ? '8px 4px' : '20px 16px',
+                                                minHeight: previewUrl ? 60 : postBgColor ? 160 : 100,
+                                                textShadow: postBgColor && !previewUrl ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
+                                                lineHeight: 1.5,
+                                            }}
+                                            placeholder={
+                                                previewUrl
+                                                    ? 'Thêm chú thích...'
+                                                    : `${user?.fullName?.split(' ').pop() || user?.username} ơi, bạn đang nghĩ gì?`
+                                            }
+                                            value={newPostContent}
+                                            onChange={(e) => setNewPostContent(e.target.value)}
+                                            onKeyDown={(e) => e.ctrlKey && e.key === 'Enter' && handleCreatePost()}
+                                            rows={previewUrl ? 2 : 4}
+                                        />
+                                    </div>
+
+                                    {/* Image/Video Preview — thumbnail style */}
+                                    {previewUrl && (
+                                        <div className="flex flex-wrap gap-2 mx-5 mb-4 p-2 bg-slate-50 rounded-2xl border border-dashed border-slate-200 transition-all duration-300">
+                                            <div className="relative w-20 h-20 rounded-xl overflow-hidden group shadow-sm border border-white flex-shrink-0">
+                                                {selectedFile?.type.startsWith('video/') ? (
+                                                    <video src={previewUrl} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                                                )}
+                                                <button
+                                                    onClick={() => { removeSelectedFile(); setPostBgColor(null); }}
+                                                    className="absolute top-1 right-1 p-1 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors opacity-0 group-hover:opacity-100 w-6 h-6 flex items-center justify-center text-sm"
+                                                >×</button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Background Color Picker — hidden when image loaded */}
+                                    <div
+                                        className="overflow-hidden transition-all duration-300"
+                                        style={{ maxHeight: previewUrl ? 0 : 64, opacity: previewUrl ? 0 : 1, marginBottom: previewUrl ? 0 : undefined }}
+                                    >
+                                        <div className="flex items-center gap-2 px-5 mb-4">
+                                            {BG_COLORS.map((color, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => setPostBgColor(i === 0 ? null : color)}
+                                                    className="transition-all duration-200 hover:scale-110 active:scale-95"
+                                                    style={{
+                                                        width: 40, height: 40,
+                                                        borderRadius: 10,
+                                                        background: i === 0 ? 'white' : color || 'white',
+                                                        border: (i === 0 && !postBgColor) || postBgColor === color
+                                                            ? '3px solid #2563eb'
+                                                            : (i === 0 ? '2px solid #cbd5e1' : '2px solid transparent'),
+                                                        boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    }}
+                                                >
+                                                    {i === 0 && <span style={{ color: '#94a3b8', fontSize: 20, lineHeight: 1 }}>×</span>}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Add to Post Bar — merged photo+video, no emoji */}
+                                    <div className="mx-5 mb-4 border border-slate-200 rounded-xl px-4 py-3 flex items-center justify-between">
+                                        <span className="text-slate-500 text-sm font-medium">Thêm vào bài viết</span>
+                                        <div className="flex items-center gap-2">
+                                            {/* Merged Photo + Video button */}
+                                            <input
+                                                type="file"
+                                                ref={fileInputRef}
+                                                onChange={handleFileSelect}
+                                                accept="image/*,video/*"
+                                                style={{ display: 'none' }}
+                                            />
+                                            <button
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="flex items-center gap-1.5 text-green-500 hover:text-green-600 hover:bg-green-50 px-2 py-1.5 rounded-lg transition-colors text-sm font-medium"
+                                                title="Ảnh hoặc Video"
+                                            >
+                                                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                                                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                                                </svg>
+                                                <span>Ảnh/Video</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Visibility + Category */}
+                                    <div className="flex items-center gap-2 px-5 pb-4">
+                                        <select
+                                            className="flex-1 bg-slate-50 text-slate-700 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400 cursor-pointer"
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setAllowedRoles([]);
+                                                setAllowedDepartments([]);
+                                                if (val === 'Managers') setAllowedRoles(['Manager', 'Admin']);
+                                                else if (DEPARTMENTS.includes(val)) setAllowedDepartments([val]);
+                                            }}
+                                        >
+                                            <option value="Public">🌐 Toàn công ty</option>
+                                            <option value="Managers">👔 Chỉ quản lý</option>
+                                            {DEPARTMENTS.map(d => <option key={d} value={d}>🏢 {d}</option>)}
+                                        </select>
+                                        <select
+                                            className="flex-1 bg-slate-50 text-slate-700 text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-blue-400 cursor-pointer"
+                                            value={selectedCategory}
+                                            onChange={(e) => setSelectedCategory(e.target.value)}
+                                        >
+                                            {POST_CATEGORIES.map(c => <option key={c} value={c}>#{c}</option>)}
+                                        </select>
+                                    </div>
+
+                                    {/* Submit Button */}
+                                    <div className="px-5 pb-5">
+                                        <button
+                                            onClick={async () => { await handleCreatePost(); if (!showWarning) setShowPostModal(false); }}
+                                            disabled={(!newPostContent.trim() && !selectedFile) || isPosting}
+                                            className="w-full py-3 rounded-xl font-bold text-[15px] tracking-wide transition-all duration-300"
+                                            style={{
+                                                background: (!newPostContent.trim() && !selectedFile)
+                                                    ? '#e2e8f0'
+                                                    : 'linear-gradient(135deg,#1e40af,#3b82f6)',
+                                                color: (!newPostContent.trim() && !selectedFile) ? '#94a3b8' : '#fff',
+                                                cursor: (!newPostContent.trim() && !selectedFile) ? 'not-allowed' : 'pointer',
+                                                boxShadow: (!newPostContent.trim() && !selectedFile) ? 'none' : '0 4px 15px rgba(37,99,235,0.35)',
+                                            }}
+                                        >
+                                            {isPosting ? (
+                                                <span className="flex items-center justify-center gap-2">
+                                                    <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                                                    Đang đăng bài...
+                                                </span>
+                                            ) : 'ĐĂNG BÀI NGAY'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Filters */}
                         <div className="bg-white rounded-xl p-4 border border-[var(--color-border)] shadow-sm">

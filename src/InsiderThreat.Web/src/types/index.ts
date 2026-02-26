@@ -115,4 +115,6 @@ export interface Comment {
     content: string;
     parentCommentId?: string;
     createdAt: string;
+    reactions?: Record<string, string[]>;
+    likedBy?: string[];
 }
