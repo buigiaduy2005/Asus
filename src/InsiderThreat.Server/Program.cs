@@ -19,6 +19,13 @@ builder.Services.AddSingleton<IMongoClient>(s =>
 // Đăng ký IMongoDatabase (Scoped)
 builder.Services.AddScoped<IMongoDatabase>(s =>
     s.GetRequiredService<IMongoClient>().GetDatabase(mongoSettings.GetValue<string>("DatabaseName")));
+
+// Đăng ký GridFSBucket để lưu trữ file/ảnh trong MongoDB
+builder.Services.AddScoped<MongoDB.Driver.GridFS.IGridFSBucket>(s =>
+{
+    var db = s.GetRequiredService<IMongoDatabase>();
+    return new MongoDB.Driver.GridFS.GridFSBucket(db);
+});
 // ==========================================
 
 // ==========================================
