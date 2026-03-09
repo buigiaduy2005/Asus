@@ -289,8 +289,7 @@
 
     .groupsPage-main-wrapper {
         flex: 1;
-        margin-left: 280px;
-        /* Width of the sidebar */
+        min-width: 0;
         position: relative;
     }
 

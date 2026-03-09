@@ -441,11 +441,15 @@ public class AuthController : ControllerBase
         var jwtSettings = _configuration.GetSection("Jwt");
         var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
 
+        // Normalize role to PascalCase (e.g., "admin" -> "Admin")
+        string normalizedRole = char.ToUpper(user.Role[0]) + user.Role.Substring(1).ToLower();
+        if (user.Role.ToLower() == "admin") normalizedRole = "Admin"; // Explicit for safety
+
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id ?? ""),
             new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role),
+            new Claim(ClaimTypes.Role, normalizedRole),
             new Claim("FullName", user.FullName)
         };
 

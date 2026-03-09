@@ -201,7 +201,7 @@ function RecentLogsTable({ defaultFilter = 'All' }: RecentLogsTableProps) {
     }
 
     return (
-        <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
             <div>
                 <span style={{ marginRight: 8 }}>Lọc theo mức độ:</span>
                 <Select value={filter} onChange={setFilter} style={{ width: 150 }}>

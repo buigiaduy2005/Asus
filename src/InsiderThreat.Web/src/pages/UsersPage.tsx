@@ -53,13 +53,20 @@ function UsersPage() {
         }
     };
 
+    // Admin role detection (case-insensitive)
+    const isAdmin = currentUser?.role?.toLowerCase() === 'admin' ||
+        currentUser?.username?.toLowerCase() === 'admin';
+
     const fetchReports = async () => {
+        if (!isAdmin) return; // Only admins can fetch reports
         setLoadingReports(true);
         try {
             const data = await feedService.getReports();
             setReports(data);
-        } catch (error) {
-            message.error('Lỗi tải danh sách báo cáo!');
+        } catch (error: any) {
+            if (error?.response?.status !== 403) {
+                message.error('Lỗi tải danh sách báo cáo!');
+            }
         } finally {
             setLoadingReports(false);
         }
@@ -98,6 +105,15 @@ function UsersPage() {
     const handleOk = async () => {
         try {
             const values = await form.validateFields();
+
+            // Normalize role to ensure it matches backend expectation (Admin, Manager, etc.)
+            if (values.role) {
+                const role = values.role.toLowerCase();
+                if (role === 'admin') values.role = 'Admin';
+                else if (role === 'quản lý') values.role = 'Quản lý';
+                else if (role === 'giám đốc') values.role = 'Giám đốc';
+                else if (role === 'nhân viên') values.role = 'Nhân viên';
+            }
 
             if (editingUser && editingUser.id) {
                 // Update

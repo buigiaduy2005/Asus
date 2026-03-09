@@ -76,7 +76,7 @@ function PostManagementPage() {
             title: 'Thống kê',
             key: 'stats',
             render: (_, record) => (
-                <Space direction="vertical" size="small">
+                <Space orientation="vertical" size="small">
                     <Tag icon={<LikeOutlined />}>{record.likedBy?.length || 0}</Tag>
                     <Tag icon={<MessageOutlined />}>{record.commentCount || 0}</Tag>
                 </Space>

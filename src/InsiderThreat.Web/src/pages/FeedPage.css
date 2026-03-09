@@ -226,8 +226,7 @@
 /* Main Layout */
 .main-wrapper {
   max-width: 1440px;
-  margin: 0 auto;
-  padding: 24px 16px;
+  padding: 24px 16px 24px 0;
   display: grid;
   grid-template-columns: 1fr;
   gap: 32px;
@@ -237,7 +236,7 @@
 @media (min-width: 1024px) {
   .main-wrapper {
     grid-template-columns: repeat(12, 1fr);
-    padding: 24px 32px;
+    padding: 24px 0 24px 0;
   }
 }
 

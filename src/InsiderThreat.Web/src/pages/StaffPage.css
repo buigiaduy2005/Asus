@@ -2,6 +2,14 @@
     min-height: 100vh;
     background-color: #f8fafc;
     padding-bottom: var(--bottom-nav-height);
+    display: flex;
+    align-items: flex-start;
+}
+
+.staffMainWrapper {
+    flex: 1;
+    overflow: hidden;
+    min-width: 0;
 }
 
 .staffHeaderMobile {
@@ -232,7 +240,6 @@
     .staffMainWrapper {
         flex: 1;
         max-width: 1200px;
-        margin: 0 auto;
         padding: 24px;
         display: flex;
         flex-direction: column;

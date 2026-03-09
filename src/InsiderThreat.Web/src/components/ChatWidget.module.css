@@ -151,3 +151,16 @@
     background-color: #e6f7ff;
     color: #1890ff;
 }
+
+@media (max-width: 767px) {
+    .widgetContainer {
+        bottom: calc(var(--bottom-nav-height) + 16px);
+        right: 16px;
+    }
+
+    .chatWindow {
+        width: calc(100vw - 32px);
+        height: min(500px, calc(100vh - var(--bottom-nav-height) - 100px));
+        right: 0;
+    }
+}
