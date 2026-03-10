@@ -275,12 +275,6 @@ export default function ProfilePage() {
                     </section>
                 </div>
 
-                {isMobile && (
-                    <button className="floating-post-btn" onClick={() => navigate('/feed')}>
-                        <span className="material-symbols-outlined">add</span>
-                    </button>
-                )}
-
                 {isMobile && <BottomNavigation />}
 
                 <FaceRegistrationModal
