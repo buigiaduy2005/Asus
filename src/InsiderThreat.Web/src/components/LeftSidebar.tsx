@@ -19,6 +19,7 @@ export default function LeftSidebar() {
         { icon: 'people', label: 'Nhân sự', path: '/staff' },
         { icon: 'folder_shared', label: 'Kho tài liệu', path: '/library' },
         { icon: 'groups', label: 'Nhóm', path: '/groups' },
+        { icon: 'videocam', label: 'Họp trực tuyến', path: '/meet' },
         { icon: 'event_available', label: 'Chấm công', path: '/attendance', special: true },
         { icon: 'person', label: 'Cá nhân', path: '/profile' },
     ];

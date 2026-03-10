@@ -26,6 +26,7 @@ export default function BottomNavigation({ items, activeKey }: BottomNavigationP
         { icon: 'newspaper', label: 'Bảng tin', path: '/feed' },
         { icon: 'group', label: 'Nhân sự', path: '/staff' },
         { icon: 'folder', label: 'Kho tài liệu', path: '/library' },
+        { icon: 'videocam', label: 'Họp', path: '/meet' },
         { icon: 'event_available', label: 'Chấm công', path: '/attendance', special: true },
         { icon: 'person', label: 'Cá nhân', path: '/profile' },
     ];
