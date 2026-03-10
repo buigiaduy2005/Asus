@@ -12,10 +12,12 @@ namespace InsiderThreat.Server.Controllers;
 public class AttendanceController : ControllerBase
 {
     private readonly IMongoCollection<AttendanceLog> _attendanceCollection;
+    private readonly IMongoCollection<AttendanceConfig> _configCollection;
 
     public AttendanceController(IMongoDatabase database)
     {
         _attendanceCollection = database.GetCollection<AttendanceLog>("AttendanceLogs");
+        _configCollection = database.GetCollection<AttendanceConfig>("AttendanceConfig");
     }
 
     // POST: api/attendance/checkin
@@ -68,5 +70,79 @@ public class AttendanceController : ControllerBase
                 .ToListAsync();
             return Ok(logs);
         }
+    }
+
+    // GET: api/attendance/config
+    [HttpGet("config")]
+    public async Task<IActionResult> GetConfig()
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (role != "Admin") return Forbid();
+
+        var config = await _configCollection.Find(c => c.ConfigType == "NetworkSettings").FirstOrDefaultAsync();
+        if (config == null)
+        {
+            config = new AttendanceConfig { AllowedIPs = "" };
+        }
+        return Ok(config);
+    }
+
+    // POST: api/attendance/config
+    [HttpPost("config")]
+    public async Task<IActionResult> UpdateConfig([FromBody] AttendanceConfig newConfig)
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        var userName = User.FindFirst(ClaimTypes.Name)?.Value ?? "Unknown";
+        if (role != "Admin") return Forbid();
+
+        var filter = Builders<AttendanceConfig>.Filter.Eq(c => c.ConfigType, "NetworkSettings");
+        var existing = await _configCollection.Find(filter).FirstOrDefaultAsync();
+
+        if (existing == null)
+        {
+            newConfig.ConfigType = "NetworkSettings";
+            newConfig.UpdatedAt = DateTime.Now;
+            newConfig.UpdatedBy = userName;
+            await _configCollection.InsertOneAsync(newConfig);
+        }
+        else
+        {
+            var update = Builders<AttendanceConfig>.Update
+                .Set(c => c.AllowedIPs, newConfig.AllowedIPs)
+                .Set(c => c.UpdatedAt, DateTime.Now)
+                .Set(c => c.UpdatedBy, userName);
+            await _configCollection.UpdateOneAsync(filter, update);
+        }
+
+        return Ok(new { Message = "Configuration updated successfully" });
+    }
+
+    // GET: api/attendance/can-checkin
+    [HttpGet("can-checkin")]
+    public async Task<IActionResult> CanCheckIn()
+    {
+        var currentIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+
+        // localhost checking (IPv6 ::1 mapped to 127.0.0.1 for local testing ease if needed, though RemoteIpAddress will show ::1 or 127.0.0.1)
+        if (currentIp == "::1") currentIp = "127.0.0.1";
+
+        var config = await _configCollection.Find(c => c.ConfigType == "NetworkSettings").FirstOrDefaultAsync();
+        
+        bool canCheckIn = true; // default true if no config restriction is set
+        
+        if (config != null && !string.IsNullOrWhiteSpace(config.AllowedIPs))
+        {
+            var allowedIps = config.AllowedIPs.Split(new[] { ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                                                .Select(ip => ip.Trim())
+                                                .ToList();
+
+            // Strict IP check for exact match in this implementation.
+            if (!allowedIps.Contains(currentIp))
+            {
+                canCheckIn = false;
+            }
+        }
+
+        return Ok(new { canCheckIn, currentIp, restrictionEnabled = config != null && !string.IsNullOrWhiteSpace(config.AllowedIPs) });
     }
 }

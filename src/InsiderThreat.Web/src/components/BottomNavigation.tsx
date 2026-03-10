@@ -1,4 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import { message } from 'antd';
+import { attendanceService } from '../services/attendanceService';
 import styles from './BottomNavigation.module.css';
 
 interface NavItem {
@@ -6,6 +8,7 @@ interface NavItem {
     label: string;
     path?: string;
     key?: string;
+    special?: boolean;
     onClick?: () => void;
 }
 
@@ -23,6 +26,7 @@ export default function BottomNavigation({ items, activeKey }: BottomNavigationP
         { icon: 'newspaper', label: 'Bảng tin', path: '/feed' },
         { icon: 'group', label: 'Nhân sự', path: '/staff' },
         { icon: 'folder', label: 'Kho tài liệu', path: '/library' },
+        { icon: 'event_available', label: 'Chấm công', path: '/attendance', special: true },
         { icon: 'person', label: 'Cá nhân', path: '/profile' },
     ];
 
@@ -40,7 +44,20 @@ export default function BottomNavigation({ items, activeKey }: BottomNavigationP
                 <button
                     key={index}
                     className={`${styles.navItem} ${isItemActive(item) ? styles.active : ''}`}
-                    onClick={() => {
+                    onClick={async () => {
+                        if ((item as any).special && item.path === '/attendance') {
+                            try {
+                                const res = await attendanceService.checkCanCheckIn();
+                                if (!res.canCheckIn) {
+                                    message.warning("Bạn phải kết nối vào mạng WiFi (IP) được chỉ định để chấm công");
+                                    return;
+                                }
+                            } catch (e) {
+                                message.error("Lỗi khi kiểm tra kết nối mạng");
+                                return;
+                            }
+                        }
+
                         if (item.onClick) item.onClick();
                         else if (item.path) navigate(item.path);
                     }}
