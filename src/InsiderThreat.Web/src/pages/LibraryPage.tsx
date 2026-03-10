@@ -84,7 +84,7 @@ const LibraryPage = () => {
     }, []);
 
     const handleDownload = (doc: SharedDocument) => {
-        window.open(`${API_BASE_URL}/api/Upload/${doc.fileId}`, '_blank');
+        window.open(`${API_BASE_URL}/api/Upload/download/${doc.fileId}?originalName=${encodeURIComponent(doc.fileName)}`, '_blank');
     };
 
     const handleDelete = async (id: string) => {
