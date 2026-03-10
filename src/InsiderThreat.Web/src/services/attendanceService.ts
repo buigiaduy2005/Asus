@@ -14,6 +14,13 @@ export interface CanCheckInResponse {
     restrictionEnabled: boolean;
 }
 
+export interface ActiveNetwork {
+    id: string;
+    name: string;
+    ipAddress: string;
+    prefix: string;
+}
+
 export const attendanceService = {
     getConfig: async (): Promise<AttendanceConfig> => {
         return api.get<AttendanceConfig>('/api/attendance/config');
@@ -25,5 +32,9 @@ export const attendanceService = {
 
     checkCanCheckIn: async (): Promise<CanCheckInResponse> => {
         return api.get<CanCheckInResponse>('/api/attendance/can-checkin');
+    },
+
+    getActiveNetworks: async (): Promise<ActiveNetwork[]> => {
+        return api.get<ActiveNetwork[]>('/api/attendance/active-networks');
     }
 };

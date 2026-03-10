@@ -136,13 +136,62 @@ public class AttendanceController : ControllerBase
                                                 .Select(ip => ip.Trim())
                                                 .ToList();
 
-            // Strict IP check for exact match in this implementation.
-            if (!allowedIps.Contains(currentIp))
+            // Support prefix matching (e.g., "192.168.1." will match "192.168.1.25")
+            if (!allowedIps.Any(ip => currentIp.StartsWith(ip)))
             {
                 canCheckIn = false;
             }
         }
 
         return Ok(new { canCheckIn, currentIp, restrictionEnabled = config != null && !string.IsNullOrWhiteSpace(config.AllowedIPs) });
+    }
+
+    // GET: api/attendance/active-networks
+    [HttpGet("active-networks")]
+    public IActionResult GetActiveNetworks()
+    {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (role != "Admin") return Forbid();
+
+        var networks = new List<object>();
+        var currentIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        if (currentIp == "::1") currentIp = "127.0.0.1";
+
+        string GetPrefix(string ip) => ip.Contains('.') ? ip.Substring(0, ip.LastIndexOf('.') + 1) : ip;
+
+        networks.Add(new {
+            Id = "client-ip",
+            Name = "Mạng thiết bị của bạn",
+            IpAddress = currentIp,
+            Prefix = GetPrefix(currentIp)
+        });
+
+        try
+        {
+            var interfaces = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
+                .Where(n => n.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up &&
+                            n.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback);
+
+            foreach (var adapter in interfaces)
+            {
+                var ipProps = adapter.GetIPProperties();
+                var ipv4 = ipProps.UnicastAddresses.FirstOrDefault(a => a.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+                if (ipv4 != null)
+                {
+                    networks.Add(new {
+                        Id = adapter.Id,
+                        Name = $"Mạng máy chủ ({adapter.Name})",
+                        IpAddress = ipv4.Address.ToString(),
+                        Prefix = GetPrefix(ipv4.Address.ToString())
+                    });
+                }
+            }
+        }
+        catch (Exception) { }
+
+        // Deduplicate by IP to avoid showing client IP and server IP twice if they are the same
+        var uniqueNetworks = networks.GroupBy(n => ((dynamic)n).IpAddress).Select(g => g.First()).ToList();
+
+        return Ok(uniqueNetworks);
     }
 }
