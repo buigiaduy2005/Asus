@@ -122,7 +122,7 @@ function UsbNotification({ userRole }: UsbNotificationProps) {
             ]}
             width={500}
         >
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Space orientation="vertical" size="large" style={{ width: '100%' }}>
                 <div style={{ textAlign: 'center' }}>
                     <WarningOutlined style={{ fontSize: 48, color: '#ff4d4f' }} />
                     <Title level={4} style={{ marginTop: 16 }}>

@@ -6,9 +6,16 @@ export default function LeftSidebar() {
     const navigate = useNavigate();
     const location = useLocation();
 
+    const user = authService.getCurrentUser();
+    // Admin detection: check role (case-insensitive) or if username is 'admin'
+    const isAdmin = user?.role?.toLowerCase().includes('admin') ||
+        user?.username?.toLowerCase() === 'admin';
+
     const navItems = [
+        ...(isAdmin ? [{ icon: 'monitoring', label: 'Dashboard', path: '/dashboard' }] : []),
         { icon: 'dynamic_feed', label: 'Bảng tin', path: '/feed' },
         { icon: 'people', label: 'Nhân sự', path: '/staff' },
+        { icon: 'folder_shared', label: 'Kho tài liệu', path: '/library' },
         { icon: 'groups', label: 'Nhóm', path: '/groups' },
         { icon: 'person', label: 'Cá nhân', path: '/profile' },
     ];
