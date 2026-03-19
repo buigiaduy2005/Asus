@@ -100,10 +100,10 @@ export default function MeetPage() {
                                     displayName: user?.username || 'Guest',
                                     email: user?.email || ''
                                 }}
-                                onApiReady={(_externalApi) => {
+                                onApiReady={(_externalApi: any) => {
                                     // You can add event listeners here
                                 }}
-                                getIFrameRef={(iframeRef) => {
+                                getIFrameRef={(iframeRef: any) => {
                                     iframeRef.style.height = '100%';
                                     iframeRef.style.width = '100%';
                                 }}
