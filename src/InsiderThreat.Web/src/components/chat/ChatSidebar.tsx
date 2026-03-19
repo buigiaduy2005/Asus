@@ -42,11 +42,11 @@ export default function ChatSidebar({ onContactClick }: ChatSidebarProps) {
         return COLORS[h];
     };
 
-    const getRoleClass = (role?: string) => {
-        if (!role) return styles.roleStaff;
-        const r = role.toLowerCase();
+    const getRoleClass = (roleOrPosition?: string) => {
+        if (!roleOrPosition) return styles.roleStaff;
+        const r = roleOrPosition.toLowerCase();
         if (r.includes('admin')) return styles.roleAdmin;
-        if (r.includes('quản lý') || r.includes('manager')) return styles.roleManager;
+        if (r.includes('quản lý') || r.includes('manager') || r.includes('trưởng phòng') || r.includes('phó phòng')) return styles.roleManager;
         if (r.includes('giám đốc') || r.includes('director')) return styles.roleDirector;
         return styles.roleStaff;
     };
@@ -98,9 +98,9 @@ export default function ChatSidebar({ onContactClick }: ChatSidebarProps) {
                             <div className={styles.contactInfo}>
                                 <div className={styles.nameRow}>
                                     <div className={styles.contactName}>{name}</div>
-                                    {contact.role && (
-                                        <span className={`${styles.roleBadge} ${getRoleClass(contact.role)}`}>
-                                            {contact.role}
+                                    {(contact.position || contact.role) && (
+                                        <span className={`${styles.roleBadge} ${getRoleClass(contact.position || contact.role)}`}>
+                                            {contact.position || contact.role}
                                         </span>
                                     )}
                                 </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userService } from '../services/userService';
 import { API_BASE_URL } from '../services/api';
@@ -20,12 +20,7 @@ function getColor(name: string) {
     return AVATAR_COLORS[h];
 }
 
-const DEPARTMENTS_DATA = [
-    { id: 'marketing', name: 'Marketing', count: 24, icon: 'groups', color: '#3b82f6' },
-    { id: 'tech', name: 'Kỹ thuật', count: 42, icon: 'code', color: '#8b5cf6' },
-    { id: 'accounting', name: 'Kế toán', count: 12, icon: 'account_balance', color: '#f59e0b' },
-    { id: 'hr', name: 'Nhân sự', count: 8, icon: 'badge', color: '#10b981' }
-];
+// Removed static DEPARTMENTS_DATA
 
 export default function StaffPage() {
     const navigate = useNavigate();
@@ -46,17 +41,53 @@ export default function StaffPage() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // Dynamically calculate department statistics based on fetched users
+    const dynamicDepartments = useMemo(() => {
+        const counts: Record<string, number> = {};
+        users.forEach(u => {
+            if (u.department) {
+                counts[u.department] = (counts[u.department] || 0) + 1;
+            }
+        });
+
+        // Base departments with their specific icons/colors
+        const defaultDepts = [
+            { id: 'marketing', name: 'Marketing', count: 0, icon: 'groups', color: '#3b82f6' },
+            { id: 'tech', name: 'Kỹ thuật', count: 0, icon: 'code', color: '#8b5cf6' },
+            { id: 'accounting', name: 'Kế toán', count: 0, icon: 'account_balance', color: '#f59e0b' },
+            { id: 'hr', name: 'Nhân sự', count: 0, icon: 'badge', color: '#10b981' }
+        ];
+
+        defaultDepts.forEach(d => {
+            if (counts[d.name]) {
+                d.count = counts[d.name];
+                delete counts[d.name];
+            }
+        });
+
+        // Add any additional departments from the database
+        const extraDepts = Object.entries(counts).map(([name, count]) => ({
+            id: name.toLowerCase().replace(/\s+/g, '-'),
+            name: name,
+            count: count,
+            icon: 'domain',
+            color: '#64748b' // default slate color
+        }));
+
+        return [...defaultDepts, ...extraDepts];
+    }, [users]);
+
     const getAvatarUrl = (user: User) => {
         if (!user.avatarUrl) return '';
         if (user.avatarUrl.startsWith('http')) return user.avatarUrl;
         return `${API_BASE_URL}${user.avatarUrl}`;
     };
 
-    const getRoleClass = (role?: string) => {
-        if (!role) return 'role-staff';
-        const r = role.toLowerCase();
+    const getRoleClass = (roleOrPosition?: string) => {
+        if (!roleOrPosition) return 'role-staff';
+        const r = roleOrPosition.toLowerCase();
         if (r.includes('admin')) return 'role-admin';
-        if (r.includes('quản lý') || r.includes('manager')) return 'role-manager';
+        if (r.includes('quản lý') || r.includes('manager') || r.includes('trưởng phòng') || r.includes('phó phòng')) return 'role-manager';
         if (r.includes('giám đốc') || r.includes('director')) return 'role-director';
         return 'role-staff';
     };
@@ -116,7 +147,11 @@ export default function StaffPage() {
                                             <div className="suggestionInfo">
                                                 <div className="nameBadgeRow">
                                                     <h3>{name}</h3>
-                                                    {user.role && <span className={`roleBadge ${getRoleClass(user.role)}`}>{user.role}</span>}
+                                                    {(user.position || user.role) && (
+                                                        <span className={`roleBadge ${getRoleClass(user.position || user.role)}`}>
+                                                            {user.position || user.role}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <span className="statusText">ĐANG ONLINE</span>
                                             </div>
@@ -136,7 +171,7 @@ export default function StaffPage() {
                             <h2>PHÒNG BAN</h2>
                         </div>
                         <div className="deptGridMobile">
-                            {DEPARTMENTS_DATA.map(dept => (
+                            {dynamicDepartments.map((dept: any) => (
                                 <div key={dept.id} className="deptCardMobile">
                                     <div className="deptIconWrapper" style={{ backgroundColor: `${dept.color}15`, color: dept.color }}>
                                         <span className="material-symbols-outlined">{dept.icon}</span>
