@@ -37,10 +37,10 @@ export default function SecureDocumentViewer({
 
     // Effect để bật thông báo Toast
     React.useEffect(() => {
-        if (!isLoadingAI && cameraGranted && !cameraError) {
+        if (requireCamera && !isLoadingAI && cameraGranted && !cameraError) {
             message.success(t('security.ai_started_success', 'Hệ thống Mắt thần AI đã kích hoạt thành công, tài liệu được bảo vệ.'));
         }
-    }, [isLoadingAI, cameraGranted, cameraError, t]);
+    }, [requireCamera, isLoadingAI, cameraGranted, cameraError, t]);
 
     React.useEffect(() => {
         if (isPhoneDetected) {
@@ -118,7 +118,7 @@ export default function SecureDocumentViewer({
             )}
             
             {/* Camera Indicator */}
-            {cameraGranted && (
+            {requireCamera && cameraGranted && (
                 <div className="camera-indicator">
                     <VideoCameraOutlined /> <span style={{ marginLeft: 4, fontSize: 12 }}>AI Scanning Active</span>
                 </div>
