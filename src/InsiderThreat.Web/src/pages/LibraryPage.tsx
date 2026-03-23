@@ -584,7 +584,7 @@ const LibraryPage = () => {
                 destroyOnClose
             >
                 {previewingDocument && (
-                    <SecureDocumentViewer>
+                    <SecureDocumentViewer documentName={previewingDocument.fileName}>
                         {previewingDocument.fileName.toLowerCase().endsWith('.docx') ? (
                             <DocxPreview fileId={previewingDocument.fileId} />
                         ) : (

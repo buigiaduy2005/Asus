@@ -58,6 +58,7 @@ function DocumentsPage() {
                 if (action === 'Delete') color = 'red';
                 if (action === 'Create' || action === 'Created') color = 'green';
                 if (action === 'Download') color = 'cyan';
+                if (action === 'Cảnh báo Camera' || action === 'CameraWarning') color = 'volcano';
                 return <Tag color={color}>{action}</Tag>;
             }
         },

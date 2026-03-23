@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Spin, Alert, Typography, message } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { api } from '../services/api';
 import { usePhoneDetector } from '../hooks/usePhoneDetector';
 import { VideoCameraOutlined, WarningOutlined } from '@ant-design/icons';
 import './SecureDocumentViewer.css';
@@ -9,11 +10,22 @@ const { Title, Text } = Typography;
 
 interface SecureDocumentViewerProps {
     children: React.ReactNode;
+    documentName?: string;
 }
 
-export default function SecureDocumentViewer({ children }: SecureDocumentViewerProps) {
+export default function SecureDocumentViewer({ children, documentName = "Tài liệu không xác định" }: SecureDocumentViewerProps) {
     const { t } = useTranslation();
     const { isPhoneDetected, isLoadingAI, cameraError, cameraGranted } = usePhoneDetector();
+    const hasLoggedWarningRef = useRef(false);
+    
+    // Lấy thông tin user hiện tại
+    const user = React.useMemo(() => {
+        try {
+            return JSON.parse(localStorage.getItem('user') || '{}');
+        } catch {
+            return {};
+        }
+    }, []);
 
     // Effect để bật thông báo Toast
     React.useEffect(() => {
@@ -25,8 +37,22 @@ export default function SecureDocumentViewer({ children }: SecureDocumentViewerP
     React.useEffect(() => {
         if (isPhoneDetected) {
             message.warning(t('security.toast_phone_detected', 'Phát hiện vật dụng khả nghi là điện thoại!'));
+            
+            // Ghi log bảo mật lên server (chỉ ghi 1 lần mỗi phiên để tránh spam)
+            if (!hasLoggedWarningRef.current) {
+                hasLoggedWarningRef.current = true;
+                
+                api.post('/api/logs', {
+                    logType: 'FileAccess',
+                    severity: 'High',
+                    message: documentName,
+                    computerName: user.username || user.fullName || 'Unknown User',
+                    ipAddress: 'Unknown',
+                    actionTaken: 'Cảnh báo Camera'
+                }).catch(err => console.error("Không thể ghi log bảo mật:", err));
+            }
         }
-    }, [isPhoneDetected, t]);
+    }, [isPhoneDetected, documentName, user, t]);
 
     const isProtecting = isPhoneDetected || isLoadingAI || !cameraGranted;
 
