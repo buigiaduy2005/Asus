@@ -4,6 +4,22 @@ import '@tensorflow/tfjs-backend-cpu';
 import '@tensorflow/tfjs-backend-webgl';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 
+// Cache toàn cục model AI để không phải tải lại mỗi lần mở popup xem tài liệu (tiết kiệm 20 giây mỗi lần)
+let globalModelPromise: Promise<cocoSsd.ObjectDetection> | null = null;
+
+export const preloadPhoneDetectorModel = () => {
+    if (!globalModelPromise) {
+        globalModelPromise = (async () => {
+            console.log("Bat dau tai mo hinh AI trong nen...");
+            await tf.ready();
+            const model = await cocoSsd.load();
+            console.log("Da tai xong mo hinh AI!");
+            return model;
+        })();
+    }
+    return globalModelPromise;
+};
+
 export function usePhoneDetector() {
     const [isPhoneDetected, setIsPhoneDetected] = useState(false);
     const [isLoadingAI, setIsLoadingAI] = useState(true);
@@ -61,18 +77,16 @@ export function usePhoneDetector() {
 
         const initializeDetector = async () => {
             try {
-                // 1. Xin quyền Camera
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                // 1. Xin quyền Camera đồng thời với 2. Load model AI (chạy song song để tiết kiệm thời gian)
+                const [stream, model] = await Promise.all([
+                    navigator.mediaDevices.getUserMedia({ video: true }),
+                    preloadPhoneDetectorModel() // Dùng model cache sẵn
+                ]);
+                
                 if (!isMounted) {
                     stream.getTracks().forEach(track => track.stop());
                     return;
                 }
-
-                // 2. Load mồ hình AI
-                await tf.ready();
-                const model = await cocoSsd.load();
-                
-                if (!isMounted) return;
                 modelRef.current = model;
                 
                 // 3. Tạo thẻ video ảo ẩn để stream hình ảnh cho AI đọc

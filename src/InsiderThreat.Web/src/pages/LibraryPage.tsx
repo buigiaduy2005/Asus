@@ -11,6 +11,7 @@ import DocViewer, { DocViewerRenderers } from "@cyntler/react-doc-viewer";
 import "@cyntler/react-doc-viewer/dist/index.css";
 import { renderAsync } from "docx-preview";
 import SecureDocumentViewer from '../components/SecureDocumentViewer';
+import { preloadPhoneDetectorModel } from '../hooks/usePhoneDetector';
 import './LibraryPage.css';
 
 const DocxPreview = ({ fileId }: { fileId: string }) => {
@@ -138,6 +139,8 @@ const LibraryPage = () => {
     useEffect(() => {
         fetchDocuments();
         fetchUsers();
+        // Tải trước mô hình AI trong nền để mở tài liệu là hiện ra ngay lập tức
+        preloadPhoneDetectorModel();
     }, []);
 
     const handleDownload = (doc: SharedDocument) => {
