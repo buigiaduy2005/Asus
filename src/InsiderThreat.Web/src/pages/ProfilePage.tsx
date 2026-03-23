@@ -125,7 +125,7 @@ export default function ProfilePage() {
     };
 
     if (!user) {
-        return <div className="flex h-screen items-center justify-center bg-[#f8fafc] text-[#64748b]">Đang tải...</div>;
+        return <div className="flex h-screen items-center justify-center bg-[var(--color-bg)] text-[var(--color-text-muted)]">Đang tải...</div>;
     }
 
     const getDisplayAvatarUrl = (url?: string) => {
@@ -282,8 +282,8 @@ export default function ProfilePage() {
                         <span className="section-label">Recent Activity</span>
                         <div className="mobile-activity-feed">
                             {userPosts.length === 0 ? (
-                                <div className="bg-white rounded-[20px] p-8 border border-[#f1f5f9] text-center">
-                                    <p className="text-[#94a3b8]">Chưa có bài đăng nào.</p>
+                                <div className="bg-[var(--color-surface)] rounded-[20px] p-8 border border-[var(--color-border)] text-center">
+                                    <p className="text-[var(--color-text-muted)]">Chưa có bài đăng nào.</p>
                                 </div>
                             ) : (
                                 userPosts.map(post => (

@@ -295,38 +295,11 @@ export default function FeedPage() {
                 <div className="feed-wrapper">
                     <div className="w-full flex flex-col gap-6">
                         {/* ── Welcome Banner ── */}
-                        <div style={{
-                            background: 'var(--gradient-premium)',
-                            borderRadius: 24,
-                            padding: '32px 32px',
-                            color: 'white',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 20,
-                            boxShadow: '0 12px 40px rgba(37,99,235,0.25)',
-                            position: 'relative',
-                            overflow: 'hidden',
-                        }}>
-                            {/* Moon Icon / Dark Mode Placeholder */}
-                            <div style={{
-                                position: 'absolute',
-                                right: 24,
-                                top: 24,
-                                width: 44,
-                                height: 44,
-                                borderRadius: '50%',
-                                background: 'rgba(255,255,255,0.25)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                backdropFilter: 'blur(8px)',
-                                cursor: 'pointer'
-                            }}>
-                                <span className="material-symbols-outlined" style={{ fontSize: 24 }}>dark_mode</span>
-                            </div>
-
-                            {/* Background decoration */}
-                            <div style={{
+                        <div className="rounded-3xl p-8 md:p-10 text-white relative flex flex-col gap-6 overflow-hidden hero-banner-light dark:hero-banner-dark shadow-[0_12px_40px_rgba(37,99,235,0.25)] dark:shadow-none transition-all duration-500"
+                             style={{ background: 'var(--gradient-premium)' /* Fallback for light mode if CSS fails */ }}>
+                            
+                            {/* Background decoration (Light Mode Only) */}
+                            <div className="block dark:hidden" style={{
                                 position: 'absolute', left: -20, bottom: -20,
                                 width: 140, height: 140,
                                 borderRadius: '50%',
@@ -334,16 +307,22 @@ export default function FeedPage() {
                                 pointerEvents: 'none',
                             }} />
 
-                            <div style={{ maxWidth: '80%' }}>
-                                <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 8, letterSpacing: '-0.02em' }}>
-                                    Chào mừng trở lại, {user?.fullName || user?.username} 👋
-                                </div>
-                                <div style={{ fontSize: 14, opacity: 0.9, lineHeight: 1.6 }}>
-                                    Hôm nay có gì mới không? Chia sẻ với đồng nghiệp nhé!
-                                </div>
+                            <div className="relative z-10 max-w-[80%]">
+                                <h1 className="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight block dark:hidden">
+                                    Chào mừng trở lại, <span className="text-white/90">{user?.fullName || user?.username}</span> 👋
+                                </h1>
+                                <h1 className="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight hidden dark:block">
+                                    Chào mừng trở lại, <span className="text-blue-400">Administrator</span>
+                                </h1>
+                                <p className="text-sm md:text-base opacity-90 font-medium block dark:hidden">
+                                     Hôm nay có gì mới không? Chia sẻ với đồng nghiệp nhé!
+                                </p>
+                                <p className="text-sm md:text-base text-slate-400 font-medium hidden dark:block">
+                                    Theo dõi các biến động truy cập hệ thống và hoạt động mới nhất.
+                                </p>
                             </div>
 
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 relative z-10 block dark:hidden">
                                 {user?.role === 'Admin' && (
                                     <button
                                         onClick={() => navigate('/dashboard')}
@@ -367,14 +346,14 @@ export default function FeedPage() {
                         </div>
 
                         {/* Create Post — Click to open modal */}
-                        <div className="bg-white rounded-2xl border border-[var(--color-border)] shadow-sm px-4 py-3 flex items-center gap-3 cursor-pointer" onClick={() => setShowPostModal(true)}>
+                        <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] shadow-sm px-4 py-3 flex items-center gap-3 cursor-pointer" onClick={() => setShowPostModal(true)}>
                             <div className="flex-shrink-0" style={{
                                 backgroundImage: `url(${getAvatarUrl(user)})`,
                                 width: 42, height: 42, minWidth: 42,
                                 borderRadius: '50%', backgroundSize: 'cover',
                                 border: '2px solid #e2e8f0'
                             }} />
-                            <div className="flex-1 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full h-10 flex items-center px-4 text-slate-400 text-[15px] select-none">
+                            <div className="flex-1 bg-[var(--color-surface-lighter)] hover:bg-[var(--color-bg)] transition-colors rounded-full h-10 flex items-center px-4 text-[var(--color-text-muted)] text-[15px] select-none">
                                 {user?.fullName?.split(' ').pop() || user?.username} ơi, bạn đang nghĩ gì?
                             </div>
                         </div>
@@ -386,13 +365,13 @@ export default function FeedPage() {
                                 style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
                                 onClick={(e) => e.target === e.currentTarget && setShowPostModal(false)}
                             >
-                                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[520px] mx-4 flex flex-col overflow-hidden" style={{ maxHeight: '90vh' }}>
+                                <div className="bg-[var(--color-surface)] rounded-2xl shadow-2xl w-full max-w-[520px] mx-4 flex flex-col overflow-hidden" style={{ maxHeight: '90vh' }}>
                                     {/* Modal Header */}
-                                    <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-                                        <h2 className="text-lg font-bold text-slate-900">TẠO BÀI VIẾT</h2>
+                                    <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border)]">
+                                        <h2 className="text-lg font-bold text-[var(--color-text-main)]">TẠO BÀI VIẾT</h2>
                                         <button
                                             onClick={() => { setShowPostModal(false); setNewPostContent(''); setPostBgColor(null); removeSelectedFile(); }}
-                                            className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-slate-600 text-xl font-bold"
+                                            className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--color-surface-lighter)] hover:bg-[var(--color-bg)] transition-colors text-[var(--color-text-muted)] text-xl font-bold"
                                         >×</button>
                                     </div>
 
@@ -405,8 +384,8 @@ export default function FeedPage() {
                                             border: '2px solid #e2e8f0'
                                         }} />
                                         <div>
-                                            <div className="font-semibold text-slate-900 text-[15px]">{user?.fullName || user?.username}</div>
-                                            <div className="inline-flex items-center gap-1 bg-blue-50 text-blue-600 text-[11px] font-bold px-2 py-0.5 rounded-md mt-0.5">
+                                            <div className="font-semibold text-[var(--color-text-main)] text-[15px]">{user?.fullName || user?.username}</div>
+                                            <div className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 text-[11px] font-bold px-2 py-0.5 rounded-md mt-0.5">
                                                 🌐 CÔNG KHAI
                                             </div>
                                         </div>
@@ -434,7 +413,7 @@ export default function FeedPage() {
                                                         ? (newPostContent.length > 80 ? 18 : newPostContent.length > 40 ? 22 : 26)
                                                         : 17,
                                                 fontWeight: postBgColor && !previewUrl ? 600 : 500,
-                                                color: postBgColor && !previewUrl ? '#fff' : '#334155',
+                                                color: postBgColor && !previewUrl ? '#fff' : 'var(--color-text-main)',
                                                 padding: previewUrl ? '8px 4px' : '20px 16px',
                                                 minHeight: previewUrl ? 60 : postBgColor ? 160 : 100,
                                                 textShadow: postBgColor && !previewUrl ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
@@ -575,12 +554,12 @@ export default function FeedPage() {
                         )}
 
                         {/* Filters */}
-                        <div className="bg-white rounded-2xl p-5 border border-[var(--color-border)] shadow-sm flex flex-col gap-4">
+                        <div className="bg-[var(--color-surface)] rounded-2xl p-5 border border-[var(--color-border)] shadow-sm flex flex-col gap-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[13px] font-bold text-slate-400 uppercase tracking-wider">Bộ lọc:</span>
+                                    <span className="text-[13px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider">Bộ lọc:</span>
                                     <select
-                                        className="bg-slate-50 text-slate-800 text-[15px] font-medium border border-slate-200 rounded-xl px-4 py-2 focus:outline-none focus:border-[var(--color-primary)] cursor-pointer"
+                                        className="bg-[var(--color-surface-lighter)] text-[var(--color-text-main)] text-[15px] font-medium border border-[var(--color-border)] rounded-xl px-4 py-2 focus:outline-none focus:border-[var(--color-primary)] cursor-pointer"
                                         value={filterCategory}
                                         onChange={(e) => setFilterCategory(e.target.value)}
                                     >
@@ -599,7 +578,7 @@ export default function FeedPage() {
                                         onClick={() => setFilterDate(period)}
                                         className={`px-5 py-2.5 rounded-xl text-[14px] font-semibold transition-all whitespace-nowrap ${filterDate === period
                                             ? 'bg-[var(--color-primary)] text-white shadow-md'
-                                            : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'
+                                            : 'bg-[var(--color-surface-lighter)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg)] border border-[var(--color-border)]'
                                             }`}
                                     >
                                         {period === 'All' ? 'Tất cả' : period === 'Today' ? 'Hôm nay' : period === 'Week' ? 'Tuần này' : 'Tháng này'}
@@ -679,10 +658,10 @@ export default function FeedPage() {
             {/* Sensitive Content Warning Modal */}
             {showWarning && (
                 <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[100]">
-                    <div className="bg-white border-2 border-yellow-400 rounded-2xl p-6 max-w-md mx-4 shadow-2xl animate-in fade-in zoom-in duration-200">
+                    <div className="bg-[var(--color-surface)] border-2 border-yellow-400 rounded-2xl p-6 max-w-md mx-4 shadow-2xl animate-in fade-in zoom-in duration-200">
                         <div className="flex items-center gap-3 mb-4">
                             <span className="material-symbols-outlined text-yellow-500 text-3xl">warning</span>
-                            <h3 className="text-xl font-bold text-slate-900">Sensitive Content Detected</h3>
+                            <h3 className="text-xl font-bold text-[var(--color-text-main)]">Sensitive Content Detected</h3>
                         </div>
                         <p className="text-[var(--color-text-muted)] mb-4 leading-relaxed">{warningMessage}</p>
                         <p className="text-sm text-[var(--color-text-muted)] mb-6">Do you want to continue posting anyway?</p>

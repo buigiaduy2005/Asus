@@ -90,12 +90,12 @@ export default function MeetPage() {
                         /* ========== LOBBY ========== */
                         <div style={{ maxWidth: 600, margin: '0 auto', marginTop: 80, width: '100%' }}>
                             <Card
-                                title={<><VideoCameraOutlined style={{ color: '#1890ff', marginRight: 8 }} /> Phòng Họp Trực Tuyến</>}
+                                title={<><VideoCameraOutlined style={{ color: 'var(--color-primary)', marginRight: 8 }} /> Phòng Họp Trực Tuyến</>}
                                 bordered={false}
                                 style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                             >
                                 <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                                    <ApiOutlined style={{ fontSize: 48, color: '#1890ff', marginBottom: 16 }} />
+                                    <ApiOutlined style={{ fontSize: 48, color: 'var(--color-primary)', marginBottom: 16 }} />
                                     <Title level={4}>Kết nối với đồng nghiệp của bạn</Title>
                                     <Text type="secondary">
                                         Tạo phòng mới và chia sẻ mã cho người khác, hoặc nhập mã phòng để tham gia.
@@ -154,7 +154,7 @@ export default function MeetPage() {
                                         size="small"
                                     />
                                 </Tooltip>
-                                <span style={{ marginLeft: 'auto', color: '#999', fontSize: 13 }}>
+                                <span style={{ marginLeft: 'auto', color: 'var(--color-text-muted)', fontSize: 13 }}>
                                     {peers.size + 1} người tham gia
                                 </span>
                             </div>

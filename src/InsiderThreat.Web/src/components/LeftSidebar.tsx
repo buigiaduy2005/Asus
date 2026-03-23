@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { message } from 'antd';
 import { authService } from '../services/auth';
@@ -7,6 +8,32 @@ import styles from './LeftSidebar.module.css';
 export default function LeftSidebar() {
     const navigate = useNavigate();
     const location = useLocation();
+    
+    // Theme State
+    const [isDark, setIsDark] = useState(false);
+
+    useEffect(() => {
+        const storedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (storedTheme === 'dark' || (!storedTheme && systemPrefersDark)) {
+            document.documentElement.classList.add('dark');
+            setIsDark(true);
+        }
+    }, []);
+
+    const toggleTheme = () => {
+        const root = document.documentElement;
+        if (root.classList.contains('dark')) {
+            root.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            setIsDark(false);
+        } else {
+            root.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+            setIsDark(true);
+        }
+    };
 
     const user = authService.getCurrentUser();
     // Admin detection: check role (case-insensitive) or if username is 'admin'
@@ -57,10 +84,32 @@ export default function LeftSidebar() {
                             }}
                         >
                             <span className="material-symbols-outlined">{item.icon}</span>
-                            <span className={styles.navLabel}>{item.label}</span>
+                                <span className={styles.navLabel}>{item.label}</span>
                         </button>
                     );
                 })}
+
+                {/* Theme Toggle */}
+                <button 
+                    onClick={toggleTheme}
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px',
+                        borderRadius: '10px', background: 'transparent', border: 'none', cursor: 'pointer',
+                        color: isDark ? '#cbd5e1' : '#475569', fontSize: '13px', fontWeight: 600,
+                        fontFamily: 'Inter, sans-serif', width: '100%', transition: 'all 0.15s ease', marginTop: 'auto'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.background = isDark ? '#1e293b' : '#f1f5f9';
+                        e.currentTarget.style.color = isDark ? '#f1f5f9' : '#0f172a';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = isDark ? '#cbd5e1' : '#475569';
+                    }}
+                >
+                    <span className="material-symbols-outlined">{isDark ? 'light_mode' : 'dark_mode'}</span>
+                    <span>{isDark ? 'Giao diện Tối' : 'Giao diện Sáng'}</span>
+                </button>
             </nav>
 
             {/* Logout */}

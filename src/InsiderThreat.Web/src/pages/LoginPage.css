@@ -5,7 +5,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 50%, #f0fdf4 100%);
+  background: var(--color-bg);
   position: relative;
   overflow: hidden;
 }
@@ -24,7 +24,7 @@
 .login-container::before {
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.3) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--color-primary-light) 0%, transparent 70%);
   top: -100px;
   left: -100px;
 }
@@ -39,10 +39,10 @@
 
 .login-card {
   width: 420px;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--color-surface-glass);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--color-border);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
   border-radius: 20px;
   padding: 40px;
@@ -57,20 +57,20 @@
 
 .login-header h2 {
   margin-bottom: 8px;
-  color: #0f172a;
+  color: var(--color-text-main);
   font-size: 1.75rem;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 .login-header p {
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.9375rem;
 }
 
 .login-footer {
   text-align: center;
   margin-top: 16px;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.875rem;
 }

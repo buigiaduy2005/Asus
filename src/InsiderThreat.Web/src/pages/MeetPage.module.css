@@ -2,7 +2,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: row;
-    background-color: #f0f2f5;
+    background-color: var(--color-bg);
 }
 
 /* Sidebar styling for desktop */
@@ -142,8 +142,8 @@
         right: 0;
         height: 60px;
         z-index: 1000;
-        background-color: white;
-        border-top: 1px solid #e8e8e8;
+        background-color: var(--color-surface);
+        border-top: 1px solid var(--color-border);
     }
 
     .videoGrid {

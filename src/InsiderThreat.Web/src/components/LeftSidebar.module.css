@@ -4,7 +4,7 @@
     width: 160px;
     min-width: 160px;
     height: calc(100vh - var(--header-height));
-    background: #ffffff;
+    background: var(--color-surface);
     border-right: 1px solid var(--color-border);
     display: none;
     /* Hide by default on mobile */
@@ -54,7 +54,7 @@
     font-size: 16px;
     font-weight: 800;
     letter-spacing: 0.04em;
-    color: #0f172a;
+    color: var(--color-text-main);
 }
 
 /* Nav */
@@ -74,7 +74,7 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    color: #475569;
+    color: var(--color-text-muted);
     font-size: 13px;
     font-weight: 500;
     font-family: 'Inter', sans-serif;
@@ -84,8 +84,8 @@
 }
 
 .navItem:hover {
-    background: #eff6ff;
-    color: #2563eb;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
 }
 
 .navItem.active {
