@@ -31,20 +31,25 @@ export function usePhoneDetector() {
                 // Quét hình ảnh từ video element
                 const predictions = await modelRef.current.detect(videoRef.current);
                 
-                // Tìm xem có đối tượng 'cell phone' nào không với độ tin cậy > 50%
+                // Tìm xem có đối tượng 'cell phone' nào không (hạ mức độ chắc chắn xuống 40% để nhạy hơn)
                 const phoneDetected = predictions.some(
-                    p => p.class === 'cell phone' && p.score > 0.50
+                    p => p.class === 'cell phone' && p.score > 0.40
                 );
 
-                // Debounce: Phải quét thấy liên tục 2-3 frame thì mới khóa màn hình tránh nháy nhầm
+                // Thuật toán Leaky Bucket Debounce: Không reset lập tức nếu lỡ mất 1 frame
                 if (phoneDetected) {
-                    detectionCountRef.current += 1;
-                    if (detectionCountRef.current > 2) {
-                        setIsPhoneDetected(true);
-                    }
+                    detectionCountRef.current += 2; // Tăng nhanh nếu thấy
                 } else {
-                    detectionCountRef.current = 0;
-                    setIsPhoneDetected(false); // Ngay khi bỏ điện thoại xuống, mở khóa ngay
+                    detectionCountRef.current = Math.max(0, detectionCountRef.current - 1); // Giảm từ từ nếu không thấy
+                }
+
+                // Cập nhật state UI
+                if (detectionCountRef.current >= 2) {
+                    setIsPhoneDetected(true);
+                    // Giới hạn không cho cộng dồn quá nhiều dẫn đến kẹt màn hình
+                    if (detectionCountRef.current > 10) detectionCountRef.current = 10;
+                } else if (detectionCountRef.current === 0) {
+                    setIsPhoneDetected(false); // Khuất hẳn thì nhả
                 }
             } catch (error) {
                 console.error("Lỗi khi quét frame:", error);
@@ -76,6 +81,14 @@ export function usePhoneDetector() {
                 videoElement.muted = true;
                 videoElement.setAttribute('playsinline', 'true'); // Cần cho một số trình duyệt
                 
+                // Đét video vào DOM nhưng làm trong suốt để trình duyệt không ngắt frame
+                videoElement.style.position = 'absolute';
+                videoElement.style.opacity = '0';
+                videoElement.style.pointerEvents = 'none';
+                videoElement.style.width = '10px';
+                videoElement.style.height = '10px';
+                document.body.appendChild(videoElement);
+                
                 // Đợi video load xong metadata để lấy kích thước
                 await videoElement.play();
                 
@@ -106,9 +119,15 @@ export function usePhoneDetector() {
             if (requestAnimationFrameId.current) {
                 cancelAnimationFrame(requestAnimationFrameId.current);
             }
-            if (videoRef.current && videoRef.current.srcObject) {
-                const stream = videoRef.current.srcObject as MediaStream;
-                stream.getTracks().forEach(track => track.stop());
+            if (videoRef.current) {
+                if (videoRef.current.srcObject) {
+                    const stream = videoRef.current.srcObject as MediaStream;
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                // Dọn rác thẻ video ngoài DOM
+                if (document.body.contains(videoRef.current)) {
+                    document.body.removeChild(videoRef.current);
+                }
             }
         };
     }, []);
