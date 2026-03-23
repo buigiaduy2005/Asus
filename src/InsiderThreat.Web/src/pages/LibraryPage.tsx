@@ -10,6 +10,7 @@ import LeftSidebar from '../components/LeftSidebar';
 import DocViewer, { DocViewerRenderers } from "@cyntler/react-doc-viewer";
 import "@cyntler/react-doc-viewer/dist/index.css";
 import { renderAsync } from "docx-preview";
+import SecureDocumentViewer from '../components/SecureDocumentViewer';
 import './LibraryPage.css';
 
 const DocxPreview = ({ fileId }: { fileId: string }) => {
@@ -580,28 +581,30 @@ const LibraryPage = () => {
                 destroyOnClose
             >
                 {previewingDocument && (
-                    previewingDocument.fileName.toLowerCase().endsWith('.docx') ? (
-                        <DocxPreview fileId={previewingDocument.fileId} />
-                    ) : (
-                        <DocViewer
-                            documents={[
-                                {
-                                    uri: `${API_BASE_URL}/api/Upload/${previewingDocument.fileId}`,
-                                    fileType: previewingDocument.fileName.split('.').pop()?.toLowerCase(),
-                                    fileName: previewingDocument.fileName
-                                }
-                            ]}
-                            pluginRenderers={DocViewerRenderers}
-                            style={{ height: '100%' }}
-                            config={{
-                                header: {
-                                    disableHeader: true,
-                                    disableFileName: true,
-                                    retainURLParams: false
-                                }
-                            }}
-                        />
-                    )
+                    <SecureDocumentViewer>
+                        {previewingDocument.fileName.toLowerCase().endsWith('.docx') ? (
+                            <DocxPreview fileId={previewingDocument.fileId} />
+                        ) : (
+                            <DocViewer
+                                documents={[
+                                    {
+                                        uri: `${API_BASE_URL}/api/Upload/${previewingDocument.fileId}`,
+                                        fileType: previewingDocument.fileName.split('.').pop()?.toLowerCase(),
+                                        fileName: previewingDocument.fileName
+                                    }
+                                ]}
+                                pluginRenderers={DocViewerRenderers}
+                                style={{ height: '100%' }}
+                                config={{
+                                    header: {
+                                        disableHeader: true,
+                                        disableFileName: true,
+                                        retainURLParams: false
+                                    }
+                                }}
+                            />
+                        )}
+                    </SecureDocumentViewer>
                 )}
             </Modal>
         </div>
