@@ -10,6 +10,7 @@ import PostCard from '../components/PostCard';
 import BottomNavigation from '../components/BottomNavigation';
 import LeftSidebar from '../components/LeftSidebar';
 import FaceRegistrationModal from '../components/FaceRegistrationModal';
+import EditProfileModal from '../components/EditProfileModal';
 import './ProfilePage.css';
 
 type TabType = 'overview' | 'security' | 'activity' | 'connections';
@@ -29,6 +30,7 @@ export default function ProfilePage() {
     const currentUser = useMemo(() => authService.getCurrentUser(), []);
     const [isOwnProfile, setIsOwnProfile] = useState(true);
     const [isFaceModalOpen, setIsFaceModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [activeTab, setActiveTab] = useState<TabType>('overview');
     const [userPosts, setUserPosts] = useState<Post[]>([]);
@@ -115,8 +117,15 @@ export default function ProfilePage() {
         }
     };
 
+    const handleProfileUpdate = (updatedUser: User) => {
+        setUser(updatedUser);
+        if (updatedUser.id === currentUser?.id) {
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+    };
+
     if (!user) {
-        return <div className="flex h-screen items-center justify-center bg-[#f8fafc] text-[#64748b]">Đang tải...</div>;
+        return <div className="flex h-screen items-center justify-center bg-[var(--color-bg)] text-[var(--color-text-muted)]">Đang tải...</div>;
     }
 
     const getDisplayAvatarUrl = (url?: string) => {
@@ -151,7 +160,7 @@ export default function ProfilePage() {
 
                     <div className="profile-hero-content">
                         <div className="hero-actions">
-                            <Button className="btn-primary-mobile" onClick={() => navigate('/edit-profile')}>
+                            <Button className="btn-primary-mobile" onClick={() => setIsEditModalOpen(true)} style={{ display: isOwnProfile ? 'block' : 'none' }}>
                                 Edit Profile
                             </Button>
                             <Button className="btn-icon-mobile">
@@ -273,8 +282,8 @@ export default function ProfilePage() {
                         <span className="section-label">Recent Activity</span>
                         <div className="mobile-activity-feed">
                             {userPosts.length === 0 ? (
-                                <div className="bg-white rounded-[20px] p-8 border border-[#f1f5f9] text-center">
-                                    <p className="text-[#94a3b8]">Chưa có bài đăng nào.</p>
+                                <div className="bg-[var(--color-surface)] rounded-[20px] p-8 border border-[var(--color-border)] text-center">
+                                    <p className="text-[var(--color-text-muted)]">Chưa có bài đăng nào.</p>
                                 </div>
                             ) : (
                                 userPosts.map(post => (
@@ -298,6 +307,13 @@ export default function ProfilePage() {
                     onCancel={() => setIsFaceModalOpen(false)}
                     userId={user.id || null}
                     userName={user.fullName || user.username}
+                />
+
+                <EditProfileModal
+                    visible={isEditModalOpen}
+                    onCancel={() => setIsEditModalOpen(false)}
+                    user={user}
+                    onUpdate={handleProfileUpdate}
                 />
             </main>
         </div>

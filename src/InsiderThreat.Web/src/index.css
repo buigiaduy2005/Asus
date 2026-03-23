@@ -41,6 +41,24 @@
   --color-dark-surface-lighter: #f1f5f9;
 }
 
+/* ===== DARK THEME — ===== */
+html.dark:root {
+  --color-bg: #121212;
+  --color-surface: #1E1E1E;
+  --color-surface-lighter: #2d2d2d;
+  --color-surface-glass: rgba(30,30,30,0.8);
+  
+  --color-text-main: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  
+  --color-border: #333333;
+  
+  --color-dark-bg: #121212;
+  --color-dark-surface: #1E1E1E;
+  --color-dark-surface-lighter: #2d2d2d;
+}
+
+
 /* ===== RESET ===== */
 *,
 *::before,
@@ -59,15 +77,21 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  position: relative;
+  width: 100%;
 }
 
 #root {
   min-height: 100vh;
   width: 100%;
+  max-width: 100vw;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  position: relative;
 }
 
 /* ===== GLASS UTILITY ===== */

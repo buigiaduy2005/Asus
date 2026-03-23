@@ -85,7 +85,7 @@ function AttendancePage() {
             key: 'checkInTime',
             render: (time) => (
                 <span>
-                    <ClockCircleOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+                    <ClockCircleOutlined style={{ marginRight: 8, color: 'var(--color-primary)' }} />
                     {new Date(time).toLocaleString('vi-VN')}
                 </span>
             ),

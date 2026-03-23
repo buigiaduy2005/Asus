@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, theme } from 'antd';
 import viVN from 'antd/locale/vi_VN';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -42,6 +42,7 @@ function RoleBasedRedirect() {
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+  const [isDarkMode, setIsDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -50,14 +51,34 @@ function App() {
     window.addEventListener('storage', handleStorageChange);
     // Tự động kiểm tra token mỗi giây để UI phản ứng nhanh khi login/logout
     const interval = setInterval(handleStorageChange, 1000);
+
+    // Watch for dark mode changes on the root html element
+    const themeObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          setIsDarkMode(document.documentElement.classList.contains('dark'));
+        }
+      });
+    });
+    themeObserver.observe(document.documentElement, { attributes: true });
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
+      themeObserver.disconnect();
     };
   }, []);
 
   return (
-    <ConfigProvider locale={viVN}>
+    <ConfigProvider 
+      locale={viVN}
+      theme={{
+        algorithm: isDarkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
+        token: {
+          colorPrimary: '#2563eb', // Maintain primary color
+        }
+      }}
+    >
       <BrowserRouter>
         <NotificationProvider>
           <Routes>

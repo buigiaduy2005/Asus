@@ -94,7 +94,7 @@ function FaceLoginPage() {
     };
 
     return (
-        <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f0f2f5' }}>
+        <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--color-bg)' }}>
             <Card style={{ width: 400, textAlign: 'center' }}>
                 <Title level={3}>🙂 Face ID Login</Title>
                 <div style={{

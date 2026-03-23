@@ -82,10 +82,12 @@ export default function NavigationBar({ onChatClick }: NavigationBarProps) {
             <div className={styles.leftSection}>
                 {/* Logo */}
                 <div className={styles.logo} onClick={() => navigate('/feed')}>
-                    <div className={styles.logoIcon}>
-                        <span className="material-symbols-outlined" style={{ color: '#3b82f6' }}>hub</span>
+                    <div className={`${styles.logoIcon} dark:bg-darkCard dark:border dark:border-darkBorder dark:shadow-none`}>
+                        <span className="material-symbols-outlined block dark:hidden" style={{ color: '#fff' }}>hub</span>
+                        <span className="material-symbols-outlined hidden dark:block" style={{ color: '#3b82f6' }}>dashboard_customize</span>
                     </div>
-                    <span className={styles.logoText}>SocialNet</span>
+                    <span className={`${styles.logoText} block dark:hidden`}>Luminous</span>
+                    <span className={`${styles.logoText} hidden dark:block !text-brandBlue`} style={{ letterSpacing: '1px' }}>Midnight Curator</span>
                 </div>
             </div>
 

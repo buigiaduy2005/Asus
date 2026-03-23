@@ -17,7 +17,7 @@ export default function SocialAttendancePage() {
         <div className="staffPageContainer">
             {!isMobile && <LeftSidebar />}
 
-            <div className="staffMainWrapper" style={{ overflowY: 'auto', background: '#f5f7fa' }}>
+            <div className="staffMainWrapper" style={{ overflowY: 'auto', background: 'var(--color-bg)' }}>
                 <main style={{ padding: '20px', minHeight: 'calc(100vh - 60px)' }}>
                     {/* Reuse the existing AttendancePage for content */}
                     <AttendancePage />

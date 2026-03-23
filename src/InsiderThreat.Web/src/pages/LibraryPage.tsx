@@ -52,8 +52,8 @@ const DocxPreview = ({ fileId }: { fileId: string }) => {
     }, [fileId]);
 
     return (
-        <div style={{ width: '100%', height: '100%', overflow: 'auto', backgroundColor: '#f3f4f6', position: 'relative' }}>
-            {loading && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', padding: '10px 20px', background: 'white', borderRadius: 8, boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>Đang tải...</div>}
+        <div style={{ width: '100%', height: '100%', overflow: 'auto', backgroundColor: 'var(--color-bg)', position: 'relative' }}>
+            {loading && <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', padding: '10px 20px', background: 'var(--color-surface)', borderRadius: 8, boxShadow: '0 4px 6px rgba(0,0,0,0.1)', color: 'var(--color-text-main)' }}>Đang tải...</div>}
             {error && <div style={{ padding: 20, textAlign: 'center', color: 'red' }}>Lỗi: {error}</div>}
             <div ref={containerRef} style={{ padding: '20px', minHeight: '100%' }} />
         </div>
@@ -191,10 +191,10 @@ const LibraryPage = () => {
 
     const getRoleBadgeStyle = (role: string) => {
         switch (role) {
-            case 'Giám đốc': return { bg: '#fff7ed', color: '#c2410c' }; // Orange
-            case 'Quản lý': return { bg: '#eff6ff', color: '#1d4ed8' }; // Blue
-            case 'Nhân viên': return { bg: '#f0fdf4', color: '#15803d' }; // Green
-            default: return { bg: '#f8fafc', color: '#64748b' };
+            case 'Giám đốc': return { bg: 'rgba(234, 88, 12, 0.15)', color: '#ea580c' }; // Orange
+            case 'Quản lý': return { bg: 'rgba(29, 78, 216, 0.15)', color: '#3b82f6' }; // Blue
+            case 'Nhân viên': return { bg: 'rgba(21, 128, 61, 0.15)', color: '#22c55e' }; // Green
+            default: return { bg: 'var(--color-surface-lighter)', color: 'var(--color-text-muted)' };
         }
     };
 
@@ -202,11 +202,11 @@ const LibraryPage = () => {
         const ext = fileName.split('.').pop()?.toLowerCase();
         switch (ext) {
             case 'doc':
-            case 'docx': return { icon: 'description', color: '#2563eb', bg: '#eff6ff' };
+            case 'docx': return { icon: 'description', color: '#2563eb', bg: 'rgba(37, 99, 235, 0.15)' };
             case 'xls':
-            case 'xlsx': return { icon: 'table_view', color: '#16a34a', bg: '#f0fdf4' };
-            case 'pdf': return { icon: 'picture_as_pdf', color: '#ef4444', bg: '#fef2f2' };
-            default: return { icon: 'draft', color: '#64748b', bg: '#f8fafc' };
+            case 'xlsx': return { icon: 'table_view', color: '#16a34a', bg: 'rgba(22, 163, 74, 0.15)' };
+            case 'pdf': return { icon: 'picture_as_pdf', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)' };
+            default: return { icon: 'draft', color: 'var(--color-text-muted)', bg: 'var(--color-surface-lighter)' };
         }
     };
 
@@ -278,7 +278,7 @@ const LibraryPage = () => {
                 <div className="mobile-search-wrapper">
                     <Input
                         placeholder="Tìm kiếm tài liệu hoặc người đăng..."
-                        prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+                        prefix={<SearchOutlined style={{ color: 'var(--color-text-muted)' }} />}
                         value={searchText}
                         onChange={e => setSearchText(e.target.value)}
                         className="mobile-search-input"
@@ -460,7 +460,7 @@ const LibraryPage = () => {
                         <div className="mobile-file-list">
                             {uploadFileList.map(file => (
                                 <div key={file.uid} className="mobile-file-item">
-                                    <div className="doc-icon-container" style={{ width: 32, height: 32, fontSize: 18, backgroundColor: '#eff6ff', color: '#2563eb' }}>
+                                    <div className="doc-icon-container" style={{ width: 32, height: 32, fontSize: 18, backgroundColor: 'rgba(37, 99, 235, 0.15)', color: '#2563eb' }}>
                                         <span className="material-symbols-outlined">description</span>
                                     </div>
                                     <div className="file-name-info">

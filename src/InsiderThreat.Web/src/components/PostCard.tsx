@@ -409,14 +409,14 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
     // For simplicity, let's use Emoji for all ACTIVE states, and Material Icon for INACTIVE.
 
     return (
-        <div className="bg-white border border-[var(--color-border)] rounded-2xl p-4 mb-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] hover:border-blue-100 transition-all duration-300">
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl p-4 mb-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-all duration-300">
             <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-[var(--color-surface-lighter)] overflow-hidden">
                         <img src={getAvatarUrl(localPost.authorAvatarUrl)} alt={localPost.authorName} className="w-full h-full object-cover" />
                     </div>
                     <div>
-                        <Link to={`/profile/${localPost.authorId}`} className="font-semibold text-slate-900 hover:underline">
+                        <Link to={`/profile/${localPost.authorId}`} className="font-semibold text-[var(--color-text-main)] hover:underline">
                             {localPost.authorName}
                         </Link>
                         <div className="flex items-center gap-2 mt-0.5">
@@ -449,11 +449,11 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
                     </div>
                 </div>
                 <div className="relative" ref={menuRef}>
-                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100">
+                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] p-1 rounded-full hover:bg-[var(--color-surface-lighter)]">
                         <span className="material-symbols-outlined">more_horiz</span>
                     </button>
                     {isMenuOpen && (
-                        <div className="absolute right-0 top-8 bg-white border border-[var(--color-border)] rounded-lg shadow-lg z-10 w-32 py-1 flex flex-col">
+                        <div className="absolute right-0 top-8 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-lg z-10 w-32 py-1 flex flex-col">
                             {currentUser?.role === 'Admin' && (
                                 <>
                                     <button onClick={async () => {
@@ -522,9 +522,8 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
                     <p>{localPost.content}</p>
                 )}
 
-                {/* Link Preview */}
                 {localPost.linkInfo && (
-                    <a href={localPost.linkInfo.url} target="_blank" rel="noreferrer" className="block mt-2 mb-2 bg-slate-50 rounded-lg overflow-hidden hover:bg-slate-100 transition-colors border border-slate-200 group">
+                    <a href={localPost.linkInfo.url} target="_blank" rel="noreferrer" className="block mt-2 mb-2 bg-[var(--color-surface-lighter)] rounded-lg overflow-hidden hover:bg-[var(--color-bg)] transition-colors border border-[var(--color-border)] group">
                         {localPost.linkInfo.imageUrl && (
                             <img src={localPost.linkInfo.imageUrl} alt="" className="w-full h-48 object-cover" />
                         )}
@@ -562,7 +561,7 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
                         } else {
                             // File
                             return (
-                                <a key={idx} href={fileUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors border border-slate-200">
+                                <a key={idx} href={fileUrl} target="_blank" rel="noreferrer" className="flex items-center gap-3 p-3 bg-[var(--color-surface-lighter)] rounded-lg hover:bg-[var(--color-bg)] transition-colors border border-[var(--color-border)]">
                                     <div className="bg-blue-500/20 p-2 rounded-lg">
                                         <span className="material-symbols-outlined text-blue-500">description</span>
                                     </div>
@@ -628,9 +627,8 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
                         }
                         <span className="ml-1">{myReaction ? (reactionLabelsVI[myReaction] || 'Thích') : 'Thích'}</span>
                     </button>
-                    {/* Reaction Popup — SVG icons */}
                     <div className="absolute bottom-full left-0 pb-2 hidden group-hover:flex z-20">
-                        <div className="flex bg-white rounded-full px-2 py-1.5 shadow-xl border border-slate-100 gap-2">
+                        <div className="flex bg-[var(--color-surface)] rounded-full px-2 py-1.5 shadow-xl border border-[var(--color-border)] gap-2">
                             {(['like', 'love', 'haha', 'wow', 'sad', 'angry'] as const).map(type => (
                                 <button
                                     key={type}
@@ -679,14 +677,14 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
 
                     return (
                         <div key={comment.id} className={`flex gap-2 ${isReply ? '' : ''}`}>
-                            <div className={`rounded-full bg-slate-200 overflow-hidden flex-shrink-0 ${isReply ? 'w-7 h-7' : 'w-8 h-8'}`}>
+                            <div className={`rounded-full bg-[var(--color-surface-lighter)] overflow-hidden flex-shrink-0 ${isReply ? 'w-7 h-7' : 'w-8 h-8'}`}>
                                 <img src={getAvatarUrl(comment.authorAvatarUrl || '')} alt="" className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 {/* Comment bubble */}
                                 <div className="relative inline-block max-w-full">
-                                    <div className="bg-white rounded-2xl px-3 py-2 border border-slate-100 shadow-sm">
-                                        <Link to={`/profile/${comment.authorId || ''}`} className="font-semibold text-xs text-slate-800 hover:underline block mb-0.5">{comment.authorName}</Link>
+                                    <div className="bg-[var(--color-surface)] rounded-2xl px-3 py-2 border border-[var(--color-border)] shadow-sm">
+                                        <Link to={`/profile/${comment.authorId || ''}`} className="font-semibold text-xs text-[var(--color-text-main)] hover:underline block mb-0.5">{comment.authorName}</Link>
                                         {comment.content.includes('![img](') ? (
                                             <>
                                                 <p className="text-sm text-slate-700 whitespace-pre-line">{comment.content.replace(/\n?!\[img\]\([^)]+\)/g, '').trim()}</p>
@@ -701,9 +699,9 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
                                     </div>
                                     {/* Reaction count badge on bubble */}
                                     {totalReactions > 0 && (
-                                        <div className="absolute -bottom-2.5 right-2 flex items-center gap-0.5 bg-white border border-slate-100 rounded-full px-1.5 py-0.5 shadow-sm">
+                                        <div className="absolute -bottom-2.5 right-2 flex items-center gap-0.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full px-1.5 py-0.5 shadow-sm">
                                             {topReactionTypes.map(t => <span key={t} className="w-3.5 h-3.5">{ReactionSVGs[t]}</span>)}
-                                            <span className="text-[10px] text-slate-500 ml-0.5">{totalReactions}</span>
+                                            <span className="text-[10px] text-[var(--color-text-muted)] ml-0.5">{totalReactions}</span>
                                         </div>
                                     )}
                                 </div>
@@ -761,7 +759,7 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
                 };
 
                 return (
-                    <div className="post-comments-section p-4 bg-slate-50 border-t border-slate-200">
+                    <div className="post-comments-section p-4 bg-[var(--color-surface-lighter)] border-t border-[var(--color-border)]">
                         {/* Comment Input */}
                         <div className="flex flex-col gap-2 mb-4">
                             {/* Reply indicator */}
@@ -788,14 +786,14 @@ export default function PostCard({ post, currentUser, onPostUpdated, onPostDelet
                                 <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden flex-shrink-0">
                                     <img src={getAvatarUrl(currentUser)} alt="" className="w-full h-full object-cover" />
                                 </div>
-                                <div className="flex-1 flex items-center bg-white border border-slate-200 rounded-full px-3 gap-2 focus-within:border-blue-300 transition-colors">
+                                <div className="flex-1 flex items-center bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full px-3 gap-2 focus-within:border-[var(--color-primary)] transition-colors">
                                     <input
                                         ref={commentInputRef}
                                         value={newComment}
                                         onChange={(e) => setNewComment(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleAddComment()}
                                         placeholder={replyToCommentId ? `Phản hồi ${replyToAuthorName}...` : 'Viết bình luận...'}
-                                        className="flex-1 bg-transparent py-2 text-sm text-slate-900 focus:outline-none placeholder:text-slate-400"
+                                        className="flex-1 bg-transparent py-2 text-sm text-[var(--color-text-main)] focus:outline-none placeholder:text-[var(--color-text-muted)]"
                                     />
                                     <input type="file" ref={commentFileRef} onChange={handleCommentFileSelect} accept="image/*" style={{ display: 'none' }} />
                                     <button onClick={() => commentFileRef.current?.click()} className="text-slate-400 hover:text-green-500 transition-colors p-1">

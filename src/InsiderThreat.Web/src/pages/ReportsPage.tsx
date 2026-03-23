@@ -68,7 +68,7 @@ function ReportsPage() {
                             href={`/feed?postId=${postId}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            style={{ color: '#1890ff', textDecoration: 'underline' }}
+                            style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}
                         >
                             Xem bài viết #{postId.slice(-8)}
                         </a>
