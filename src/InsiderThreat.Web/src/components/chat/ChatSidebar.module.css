@@ -11,6 +11,7 @@
     position: sticky;
     top: var(--header-height);
     align-self: flex-start;
+    justify-self: flex-end;
     overflow: hidden;
 }
 
@@ -26,6 +27,7 @@
     position: sticky;
     top: var(--header-height);
     align-self: flex-start;
+    justify-self: flex-end;
     padding-top: 12px;
 }
 
