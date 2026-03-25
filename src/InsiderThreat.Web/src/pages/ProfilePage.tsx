@@ -57,14 +57,21 @@ export default function ProfilePage() {
             const viewingOwnProfile = !userId || userId === currentUser.id;
             setIsOwnProfile(viewingOwnProfile);
 
-            if (viewingOwnProfile) {
-                setUser(currentUser);
-            } else {
-                try {
-                    const userData = await userService.getUserById(targetUserId!);
-                    setUser(userData);
-                } catch (error) {
-                    console.error("Error fetching user profile", error);
+            try {
+                // Always fetch latest data from server
+                const userData = await userService.getUserById(targetUserId!);
+                setUser(userData);
+                
+                // If viewing own profile, sync local storage
+                if (viewingOwnProfile) {
+                    localStorage.setItem('user', JSON.stringify(userData));
+                }
+            } catch (error) {
+                console.error("Error fetching user profile", error);
+                
+                // Fallback to local data if server fetch fails for own profile
+                if (viewingOwnProfile) {
+                    setUser(currentUser);
                 }
             }
 
