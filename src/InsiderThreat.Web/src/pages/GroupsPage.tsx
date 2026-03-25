@@ -60,7 +60,10 @@ export default function GroupsPage() {
 
     const [groups] = useState<Group[]>(MOCK_GROUPS);
     const [showCreate, setShowCreate] = useState(false);
-    const [form, setForm] = useState({ name: '', description: '', privacy: 'PUBLIC' });
+    const [form, setForm] = useState({ 
+        name: '', description: '', privacy: 'PUBLIC', 
+        startDate: '', endDate: '', members: [] as string[] 
+    });
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
     useEffect(() => {
@@ -124,12 +127,12 @@ export default function GroupsPage() {
                     {showCreate && (
                         <div className="modalBackdrop" onClick={() => setShowCreate(false)}>
                             <div className="modal" onClick={e => e.stopPropagation()}>
-                                <h3 className="modalTitle">{t('groups.modal_title', 'Tạo nhóm mới')}</h3>
+                                <h3 className="modalTitle">{t('groups.modal_title', 'Tạo dự án / nhóm mới')}</h3>
                                 <div className="formRow">
-                                    <label className="formLabel">{t('groups.lbl_group_name', 'Tên nhóm')}</label>
+                                    <label className="formLabel">{t('groups.lbl_group_name', 'Tên dự án / nhóm')}</label>
                                     <input
                                         className="formInput"
-                                        placeholder={t('groups.placeholder_name', "Nhập tên nhóm...")}
+                                        placeholder={t('groups.placeholder_name', "Nhập tên dự án hoặc nhóm...")}
                                         value={form.name}
                                         onChange={e => setForm({ ...form, name: e.target.value })}
                                     />
@@ -138,11 +141,56 @@ export default function GroupsPage() {
                                     <label className="formLabel">{t('groups.lbl_description', 'Mô tả')}</label>
                                     <textarea
                                         className="formTextarea"
-                                        placeholder={t('groups.placeholder_desc', "Mô tả ngắn về nhóm...")}
+                                        placeholder={t('groups.placeholder_desc', "Mô tả ngắn về nội dung dự án...")}
                                         value={form.description}
                                         onChange={e => setForm({ ...form, description: e.target.value })}
                                     />
                                 </div>
+                                
+                                <div className="formRowGroup">
+                                    <div className="formRow">
+                                        <label className="formLabel">Thời gian bắt đầu</label>
+                                        <input
+                                            type="date"
+                                            className="formInput"
+                                            value={form.startDate}
+                                            onChange={e => setForm({ ...form, startDate: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="formRow">
+                                        <label className="formLabel">Thời gian kết thúc</label>
+                                        <input
+                                            type="date"
+                                            className="formInput"
+                                            value={form.endDate}
+                                            onChange={e => setForm({ ...form, endDate: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="formRow">
+                                    <label className="formLabel">Thêm thành viên</label>
+                                    <div className="membersInputWrap">
+                                        <input
+                                            className="formInput"
+                                            placeholder="Nhập tên hoặc email người dùng..."
+                                        />
+                                        <button className="addMemberBtn"><span className="material-symbols-outlined">add</span></button>
+                                    </div>
+                                    <div className="selectedMembers">
+                                        <span className="memberTag">
+                                            <img src="https://i.pravatar.cc/150?u=12" alt="Avatar" />
+                                            Jerome Bell
+                                            <button className="removeTag">×</button>
+                                        </span>
+                                        <span className="memberTag">
+                                            <img src="https://i.pravatar.cc/150?u=24" alt="Avatar" />
+                                            Brooklyn Simmons
+                                            <button className="removeTag">×</button>
+                                        </span>
+                                    </div>
+                                </div>
+
                                 <div className="formRow">
                                     <label className="formLabel">{t('groups.lbl_privacy', 'Quyền riêng tư')}</label>
                                     <select
@@ -156,7 +204,7 @@ export default function GroupsPage() {
                                 </div>
                                 <div className="modalActions">
                                     <button className="btnCancel" onClick={() => setShowCreate(false)}>{t('groups.btn_cancel', 'Hủy')}</button>
-                                    <button className="btnCreate" onClick={() => setShowCreate(false)}>{t('groups.btn_confirm_create', 'Tạo nhóm')}</button>
+                                    <button className="btnCreate" onClick={() => setShowCreate(false)}>{t('groups.btn_confirm_create', 'Tạo dự án')}</button>
                                 </div>
                             </div>
                         </div>
