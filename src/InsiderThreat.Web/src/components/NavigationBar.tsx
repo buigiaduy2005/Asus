@@ -133,9 +133,10 @@ export default function NavigationBar({ onChatClick }: NavigationBarProps) {
                     title="Chat"
                 >
                     <div className={styles.actionIcon}>
-                        {/* Custom Messenger SVG */}
+                        {/* Twin Bubble Messenger SVG */}
                         <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
-                            <path d="M12 2C6.48 2 2 6.13 2 11.23c0 2.84 1.48 5.37 3.8 7.02.16.11.23.31.2.5l-.47 2.87c-.05.32.32.55.6.38l3.16-1.87a.35.35 0 01.32-.01c.77.3 1.63.48 2.53.48 5.52 0 10-4.13 10-9.23S17.52 2 12 2zM9.9 14.15a.9.9 0 01-1.22.06l-2.45-1.95a.9.9 0 01.07-1.47l4.46-3.03a.9.9 0 011.22-.06l2.45 1.95a.9.9 0 01-.07 1.47l-4.46 3.03z" />
+                            <path d="M15.5 4.5c3.59 0 6.5 2.5 6.5 5.58 0 1.48-.68 2.83-1.8 3.87l.59 2.36a.5.5 0 01-.68.59l-2.43-1.21a7.48 7.48 0 01-2.18.33c-3.59 0-6.5-2.5-6.5-5.58s2.91-5.58 6.5-5.58z" />
+                            <path className={styles.chatBubbleStroke} strokeWidth="2.5" strokeLinejoin="round" d="M9.5 8.5C4.8 8.5 1 11.85 1 16c0 1.9.85 3.63 2.25 4.95l-.65 2.62a.5.5 0 00.67.61l2.88-1.44A8.47 8.47 0 009.5 23.5c4.7 0 8.5-3.35 8.5-7.5S14.2 8.5 9.5 8.5z" />
                         </svg>
                         <div className={styles.messageBadge}>2</div>
                     </div>
