@@ -148,9 +148,7 @@
     margin-bottom: 4px;
 }
 
-.label-password {
-    color: #ef4444;
-}
+/* Redundant label-password removed to match username color */
 
 /* Transparent Underline inputs */
 .zdak-input.ant-input,

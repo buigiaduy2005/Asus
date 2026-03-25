@@ -202,7 +202,7 @@ function LoginPage() {
                             </div>
 
                             <div className="input-group">
-                                <label className="input-label label-password">{t('auth.password')}</label>
+                                <label className="input-label">{t('auth.password')}</label>
                                 <Form.Item name="password" rules={[{ required: true, message: t('auth.require_password') }]}>
                                     <Input.Password 
                                         placeholder="••••••••" 
