@@ -63,4 +63,17 @@ public class NotificationHub : Hub
         }
         await base.OnDisconnectedAsync(exception);
     }
+
+    // --- Group Chat Methods ---
+    public async Task JoinChatGroup(string groupId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"group_{groupId}");
+        _logger.LogInformation($"Client {Context.ConnectionId} joined chat group {groupId}");
+    }
+
+    public async Task LeaveChatGroup(string groupId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"group_{groupId}");
+        _logger.LogInformation($"Client {Context.ConnectionId} left chat group {groupId}");
+    }
 }

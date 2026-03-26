@@ -1,5 +1,6 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json.Serialization;
 using System;
 using System.Collections.Generic;
 
@@ -7,8 +8,8 @@ namespace InsiderThreat.Server.Models
 {
     public class Group
     {
-        [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
+        [JsonPropertyName("id")]
         public string? Id { get; set; }
 
         [BsonElement("name")]

@@ -26,9 +26,11 @@ namespace InsiderThreat.Server.Controllers
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                // Get groups where user is a member
+                // Get groups where user is a member or group is public
                 var groups = await _groups
-                    .Find(g => g.MemberIds.Contains(userId!) || g.Privacy == "Public")
+                    .Find(g => g.MemberIds.Contains(userId!) || 
+                               g.Privacy.ToLower() == "public" || 
+                               g.Privacy.ToUpper() == "PUBLIC")
                     .SortBy(g => g.Name)
                     .ToListAsync();
 
@@ -74,14 +76,21 @@ namespace InsiderThreat.Server.Controllers
                     return Unauthorized(new { message = "User not authenticated" });
                 }
 
+                var memberIds = request.MemberIds ?? new List<string>();
+                if (!memberIds.Contains(userId))
+                {
+                    memberIds.Add(userId); // Ensure creator is always a member
+                }
+
                 var group = new Group
                 {
                     Name = request.Name,
                     Description = request.Description,
                     Type = request.Type ?? "Department",
-                    Privacy = request.Privacy ?? "Public",
+                    Privacy = string.IsNullOrEmpty(request.Privacy) ? "Public" : 
+                              char.ToUpper(request.Privacy[0]) + request.Privacy.Substring(1).ToLower(),
                     AdminIds = new List<string> { userId },
-                    MemberIds = new List<string> { userId },
+                    MemberIds = memberIds,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -164,5 +173,6 @@ namespace InsiderThreat.Server.Controllers
         public string Description { get; set; } = string.Empty;
         public string? Type { get; set; }
         public string? Privacy { get; set; }
+        public List<string>? MemberIds { get; set; }
     }
 }

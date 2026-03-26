@@ -1,12 +1,13 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json.Serialization;
 
 namespace InsiderThreat.Shared
 {
     public class User
     {
-        [BsonId] // Định nghĩa đây là khóa chính
         [BsonRepresentation(BsonType.ObjectId)] // Tự động chuyển ObjectId sang string
+        [JsonPropertyName("id")]
         public string? Id { get; set; }
 
         public string Username { get; set; } = string.Empty;

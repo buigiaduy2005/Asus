@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import LeftSidebar from '../components/LeftSidebar';
 import BottomNavigation from '../components/BottomNavigation';
 import { userService } from '../services/userService';
-import { API_BASE_URL } from '../services/api';
+import { api, API_BASE_URL } from '../services/api';
 import type { User } from '../types';
 import './GroupsPage.css';
 
@@ -65,7 +65,7 @@ export default function GroupsPage() {
     const [groups, setGroups] = useState<Group[]>(MOCK_GROUPS);
     const [showCreate, setShowCreate] = useState(false);
     const [form, setForm] = useState({ 
-        name: '', description: '', privacy: 'PUBLIC', 
+        name: '', description: '', privacy: 'Public', 
         startDate: '', endDate: '', members: [] as User[] 
     });
     const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -83,6 +83,40 @@ export default function GroupsPage() {
             userService.getAllUsers().then(setAllUsers).catch(console.error);
         }
     }, [showCreate]);
+
+    useEffect(() => {
+        const loadGroups = async () => {
+            try {
+                const projects = await api.get<any[]>('/api/groups');
+                // Ensure we don't duplicate the mock groups if they somehow got into DB testing
+                const realProjects = projects
+                    .filter(p => !['1', '2', '3', '4'].includes(p.id))
+                    .map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        description: p.description,
+                        members: p.memberIds?.length || 1,
+                        category: p.type === 'Project' ? 'Dự án' : 'Phòng ban',
+                        privacy: (p.privacy || 'PUBLIC').toUpperCase() as 'PUBLIC' | 'PRIVATE',
+                        coverImage: p.coverUrl || 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=200&fit=crop'
+                    }));
+                setGroups([...realProjects, ...MOCK_GROUPS]);
+            } catch (err) {
+                console.error("Failed to fetch groups", err);
+            }
+        };
+        loadGroups();
+    }, []);
+
+    const handleAccessGroup = (groupId: string) => {
+        if (['1', '2', '3', '4'].includes(groupId)) {
+            // Community Chat -> Route to independent chat UI
+            navigate(`/chat?groupId=${groupId}`);
+        } else {
+            // Project -> Route to Task Management Dashboard
+            navigate(`/groups/${groupId}`);
+        }
+    };
 
     const filteredUsers = searchUserQuery 
         ? allUsers.filter(u => 
@@ -142,7 +176,7 @@ export default function GroupsPage() {
                                         {group.category && <> • {group.category}</>}
                                     </div>
                                     <div className="groupDesc">{group.description}</div>
-                                    <button className="accessBtn" onClick={() => navigate(`/groups/${group.id}`)}>
+                                    <button className="accessBtn" onClick={() => handleAccessGroup(group.id)}>
                                         {t('groups.btn_access', 'TRUY CẬP')}
                                     </button>
                                 </div>
@@ -251,35 +285,53 @@ export default function GroupsPage() {
                                         value={form.privacy}
                                         onChange={e => setForm({ ...form, privacy: e.target.value })}
                                     >
-                                        <option value="PUBLIC">{t('groups.privacy_public', 'Công khai')}</option>
-                                        <option value="PRIVATE">{t('groups.privacy_private', 'Riêng tư')}</option>
+                                        <option value="Public">{t('groups.privacy_public', 'Công khai')}</option>
+                                        <option value="Private">{t('groups.privacy_private', 'Riêng tư')}</option>
                                     </select>
                                 </div>
                                 <div className="modalActions">
                                     <button className="btnCancel" onClick={() => setShowCreate(false)}>{t('groups.btn_cancel', 'Hủy')}</button>
                                     <button 
                                         className="btnCreate" 
-                                        onClick={() => {
+                                        onClick={async () => {
                                             if (!form.name.trim()) {
                                                 alert('Vui lòng nhập tên dự án/nhóm!');
                                                 return;
                                             }
-                                            const newGroup: Group = {
-                                                id: Date.now().toString(),
-                                                name: form.name,
-                                                description: form.description || 'Dự án mới',
-                                                members: form.members.length + 1,
-                                                category: 'Dự án mới',
-                                                privacy: form.privacy as 'PUBLIC' | 'PRIVATE',
-                                                coverImage: `https://picsum.photos/seed/${Date.now()}/400/200`
-                                            };
-                                            setGroups([...groups, newGroup]);
-                                            setForm({ 
-                                                name: '', description: '', privacy: 'PUBLIC', 
-                                                startDate: '', endDate: '', members: [] 
-                                            });
-                                            setSearchUserQuery('');
-                                            setShowCreate(false);
+                                            
+                                            try {
+                                                const groupData = {
+                                                    name: form.name,
+                                                    description: form.description || 'Dự án mới',
+                                                    type: 'Project',
+                                                    privacy: form.privacy,
+                                                    memberIds: form.members.map(m => m.id || (m as any).Id)
+                                                };
+                                                
+                                                // Post to backend API
+                                                const p = await api.post<any>('/api/groups', groupData);
+                                                
+                                                const newGroup: Group = {
+                                                    id: p.id,
+                                                    name: p.name,
+                                                    description: p.description,
+                                                    members: p.memberIds?.length || 1,
+                                                    category: 'Dự án',
+                                                    privacy: (p.privacy || 'PRIVATE').toUpperCase() as 'PUBLIC' | 'PRIVATE',
+                                                    coverImage: p.coverUrl || `https://picsum.photos/seed/${Date.now()}/400/200`
+                                                };
+                                                
+                                                setGroups([newGroup, ...groups]);
+                                                setForm({ 
+                                                    name: '', description: '', privacy: 'Public', 
+                                                    startDate: '', endDate: '', members: [] 
+                                                });
+                                                setSearchUserQuery('');
+                                                setShowCreate(false);
+                                            } catch (err) {
+                                                console.error('Create project failed', err);
+                                                alert('Lỗi khi tạo dự án.');
+                                            }
                                         }}
                                     >
                                         {t('groups.btn_confirm_create', 'Tạo dự án')}
