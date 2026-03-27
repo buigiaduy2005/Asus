@@ -22,25 +22,26 @@ export default function GroupDetailPage() {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState('dashboard');
+    const [groupName, setGroupName] = useState<string>('');
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+    useEffect(() => {
+        const fetchGroupName = async () => {
+            try {
+                const res = await api.get<any>(`/api/groups/${id}`);
+                setGroupName(res.name);
+            } catch (err) {
+                console.error('Failed to fetch group name', err);
+            }
+        };
+        if (id) fetchGroupName();
+    }, [id]);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 1024);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
-
-    const getGroupName = (id?: string) => {
-        switch (id) {
-            case '1': return 'Phòng Phát Triển Sản Phẩm';
-            case '2': return 'Hội Những Người Thích Cà Phê';
-            case '3': return 'Kỹ thuật & Công nghệ';
-            case '4': return 'HR & Văn hóa doanh nghiệp';
-            default: return `Dự án ${id}`;
-        }
-    };
-    
-    const groupName = getGroupName(id);
 
     const renderContent = () => {
         switch (activeTab) {

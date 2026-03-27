@@ -1,186 +1,233 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
+import { message, Spin, Avatar, Tooltip } from 'antd';
+import { api, API_BASE_URL } from '../../services/api';
 import './FilesTab.css';
 
 interface FileItem {
-    id: number;
-    name: string;
-    type: 'image' | 'pdf' | 'doc' | 'spreadsheet' | 'other';
-    size: string;
-    preview?: string;
+    id: string;
+    fileId: string;
+    fileName: string;
+    contentType: string;
+    size: number;
+    uploaderName: string;
+    uploadDate: string;
 }
-
-const MOCK_FILES: FileItem[] = [
-    { id: 1, name: 'Building_Facade_Final.jpg', type: 'image', size: '14.2 MB', preview: 'https://picsum.photos/300/200?random=10' },
-    { id: 2, name: 'Q4_Editorial_Strategy.pdf', type: 'pdf', size: '2.4 MB' },
-    { id: 3, name: 'Interview_Transcripts.docx', type: 'doc', size: '45 KB' },
-    { id: 4, name: 'Project_Timeline_v2.xlsx', type: 'spreadsheet', size: '1.1 MB' },
-    { id: 5, name: 'Cover_Art_Draft.png', type: 'image', size: '8.9 MB', preview: 'https://picsum.photos/300/200?random=20' },
-    { id: 6, name: 'PRD_Document_v3.pdf', type: 'pdf', size: '3.7 MB' },
-];
 
 const FILE_ICONS: Record<string, { icon: string; color: string; bg: string }> = {
     pdf: { icon: 'picture_as_pdf', color: '#ef4444', bg: '#fef2f2' },
     doc: { icon: 'description', color: '#3b82f6', bg: '#eff6ff' },
-    spreadsheet: { icon: 'table_chart', color: '#10b981', bg: '#f0fdf4' },
+    docx: { icon: 'description', color: '#3b82f6', bg: '#eff6ff' },
+    xls: { icon: 'table_chart', color: '#10b981', bg: '#f0fdf4' },
+    xlsx: { icon: 'table_chart', color: '#10b981', bg: '#f0fdf4' },
+    zip: { icon: 'folder_zip', color: '#f59e0b', bg: '#fffbeb' },
+    rar: { icon: 'folder_zip', color: '#f59e0b', bg: '#fffbeb' },
     other: { icon: 'insert_drive_file', color: '#94a3b8', bg: '#f8fafc' },
     image: { icon: 'image', color: '#8b5cf6', bg: '#f5f3ff' },
 };
 
-const TEAM = [
-    { name: 'Sarah Jenkins', role: 'Lead Editor', avatar: 'https://i.pravatar.cc/150?u=sarah', status: 'online' },
-    { name: 'Marcus Thorne', role: 'UX Designer', avatar: 'https://i.pravatar.cc/150?u=marcus', status: 'online' },
-    { name: 'Elena Rodriguez', role: 'Project Lead', avatar: 'https://i.pravatar.cc/150?u=elena', status: 'offline' },
-    { name: 'James Wu', role: 'Architect', avatar: 'https://i.pravatar.cc/150?u=james', status: 'online' },
-];
+interface Member {
+    id: string;
+    fullName: string;
+    avatarUrl?: string;
+    roleLevel?: string;
+}
 
 export default function FilesTab() {
+    const { id: groupId } = useParams<{ id: string }>();
     const { t } = useTranslation();
-    const [files, setFiles] = useState<FileItem[]>(MOCK_FILES);
+    const [files, setFiles] = useState<FileItem[]>([]);
+    const [members, setMembers] = useState<Member[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [uploading, setUploading] = useState(false);
     const [dragOver, setDragOver] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const filtered = files.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    const handleFileDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        setDragOver(false);
-        // Simulate adding dropped file
-        const droppedFiles = Array.from(e.dataTransfer.files);
-        const newFiles = droppedFiles.map((f, i) => ({
-            id: Date.now() + i,
-            name: f.name,
-            type: f.type.startsWith('image/') ? 'image' as const : 'other' as const,
-            size: `${(f.size / 1024).toFixed(0)} KB`,
-        }));
-        setFiles(prev => [...newFiles, ...prev]);
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [filesRes, membersRes] = await Promise.all([
+                api.get<FileItem[]>(`/api/groups/${groupId}/files`),
+                api.get<Member[]>(`/api/groups/${groupId}/members-details`)
+            ]);
+            setFiles(filesRes);
+            setMembers(membersRes);
+        } catch (err) {
+            message.error('Không thể tải dữ liệu tệp tin');
+        } finally {
+            setLoading(false);
+        }
     };
+
+    useEffect(() => {
+        if (groupId) fetchData();
+    }, [groupId]);
+
+    const handleFileUpload = async (uploadFiles: File[]) => {
+        if (uploadFiles.length === 0) return;
+        setUploading(true);
+        const hide = message.loading('Đang tải lên...', 0);
+
+        try {
+            for (const file of uploadFiles) {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('description', `Dự án: ${file.name}`);
+                await api.post(`/api/groups/${groupId}/files`, formData);
+            }
+            message.success('Tải lên thành công');
+            fetchData();
+        } catch (err) {
+            message.error('Lỗi khi tải lên tệp tin');
+        } finally {
+            setUploading(false);
+            hide();
+        }
+    };
+
+    const handleDownload = (file: FileItem) => {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const downloaderName = user.fullName || 'User';
+        const url = `${API_BASE_URL}/api/upload/download/${file.fileId}?originalName=${encodeURIComponent(file.fileName)}&downloaderName=${encodeURIComponent(downloaderName)}`;
+        window.open(url, '_blank');
+    };
+
+    const getFileType = (fileName: string) => {
+        const ext = fileName.split('.').pop()?.toLowerCase() || '';
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image';
+        return ext || 'other';
+    };
+
+    const formatSize = (bytes: number) => {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    };
+
+    const filtered = files.filter(f => f.fileName.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    if (loading) return <div className="loading-files"><Spin size="large" /></div>;
 
     return (
         <div className="filesTab">
-            {/* Header */}
             <div className="files-header">
                 <div>
-                    <p className="files-section-label">{t('project_detail.files.resource_library')}</p>
-                    <h2 className="files-title">{t('project_detail.files.project_assets')}</h2>
+                    <p className="files-section-label">Tài liệu dự án</p>
+                    <h2 className="files-title">Thư viện tệp tin ({files.length})</h2>
                 </div>
                 <div className="files-header-actions">
                     <div className="files-search">
                         <span className="material-symbols-outlined">search</span>
                         <input
                             type="text"
-                            placeholder={t('project_detail.files.search')}
+                            placeholder="Tìm kiếm tệp tin..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    <button className="upload-btn" onClick={() => inputRef.current?.click()}>
-                        <span className="material-symbols-outlined">cloud_upload</span>
-                        {t('project_detail.files.upload')}
+                    <button className="upload-btn" disabled={uploading} onClick={() => inputRef.current?.click()}>
+                        {uploading ? <Spin size="small" /> : <span className="material-symbols-outlined">cloud_upload</span>}
+                        {uploading ? 'Đang tải...' : 'Tải lên'}
                     </button>
                     <input ref={inputRef} type="file" multiple hidden onChange={(e) => {
-                        const newFiles = Array.from(e.target.files || []).map((f, i) => ({
-                            id: Date.now() + i,
-                            name: f.name,
-                            type: f.type.startsWith('image/') ? 'image' as const : 'other' as const,
-                            size: `${(f.size / 1024).toFixed(0)} KB`,
-                        }));
-                        setFiles(prev => [...newFiles, ...prev]);
+                        handleFileUpload(Array.from(e.target.files || []));
                     }} />
                 </div>
             </div>
 
             <div className="files-main-layout">
-                {/* Files Grid */}
                 <div className="files-grid-area">
-                    {/* Drop Zone */}
                     <div
                         className={`drop-zone ${dragOver ? 'active' : ''}`}
-                        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                        onDragLeave={() => setDragOver(false)}
-                        onDrop={handleFileDrop}
+                        onDragEnter={e => { e.preventDefault(); e.stopPropagation(); setDragOver(true); }}
+                        onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOver(true); }}
+                        onDragLeave={e => { e.preventDefault(); e.stopPropagation(); setDragOver(false); }}
+                        onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setDragOver(false);
+                            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                                handleFileUpload(Array.from(e.dataTransfer.files));
+                            }
+                        }}
                     >
                         <span className="material-symbols-outlined">cloud_upload</span>
-                        <p>{t('project_detail.files.drop_zone')}</p>
+                        <p>Kéo và thả tệp tin vào đây để chia sẻ nhanh</p>
                     </div>
 
-                    {/* Files Grid */}
                     <div className="files-grid">
-                        {filtered.map(file => (
-                            <div key={file.id} className="file-card">
-                                {file.preview ? (
-                                    <div className="file-card-preview">
-                                        <img src={file.preview} alt={file.name} />
-                                    </div>
-                                ) : (
-                                    <div className="file-card-icon" style={{ background: FILE_ICONS[file.type]?.bg }}>
-                                        <span className="material-symbols-outlined" style={{ color: FILE_ICONS[file.type]?.color, fontSize: 36 }}>
-                                            {FILE_ICONS[file.type]?.icon}
+                        {filtered.map(file => {
+                            const type = getFileType(file.fileName);
+                            const iconConfig = FILE_ICONS[type] || FILE_ICONS['other'];
+                            return (
+                                <div key={file.id} className="file-card">
+                                    <div className="file-card-icon" style={{ background: iconConfig.bg }}>
+                                        <span className="material-symbols-outlined" style={{ color: iconConfig.color, fontSize: 36 }}>
+                                            {iconConfig.icon}
                                         </span>
                                     </div>
-                                )}
-                                <div className="file-card-info">
-                                    <p className="file-name">{file.name}</p>
-                                    <div className="file-meta">
-                                        <span className="file-type-label">{file.type.toUpperCase()}</span>
-                                        <span className="file-size">• {file.size}</span>
-                                        <button className="file-download-btn" title="Download">
-                                            <span className="material-symbols-outlined">download</span>
-                                        </button>
+                                    <div className="file-card-info">
+                                        <Tooltip title={file.fileName}>
+                                            <p className="file-name">{file.fileName}</p>
+                                        </Tooltip>
+                                        <div className="file-meta">
+                                            <span className="file-type-label">{type.toUpperCase()}</span>
+                                            <span className="file-size">• {formatSize(file.size)}</span>
+                                            <button className="file-download-btn" onClick={() => handleDownload(file)}>
+                                                <span className="material-symbols-outlined">download</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {filtered.length === 0 && (
                         <div className="no-files">
                             <span className="material-symbols-outlined">folder_open</span>
-                            <p>{t('library.no_docs')}</p>
+                            <p>Không tìm thấy tệp tin nào</p>
                         </div>
                     )}
                 </div>
 
-                {/* Right Panel */}
                 <div className="files-sidebar">
-                    {/* Team */}
                     <div className="files-panel">
                         <div className="files-panel-header">
-                            <h3>{t('project_detail.team.title')}</h3>
-                            <span className="material-symbols-outlined" style={{ fontSize: 20, cursor: 'pointer', color: 'var(--color-primary)' }}>person_add</span>
+                            <h3>Thành viên ({members.length})</h3>
                         </div>
                         <div className="files-team-list">
-                            {TEAM.map(m => (
-                                <div key={m.name} className="files-team-member">
+                            {members.map(m => (
+                                <div key={m.id} className="files-team-member">
                                     <div className="files-avatar-wrap">
-                                        <img src={m.avatar} alt={m.name} />
-                                        <span className={`files-status-dot files-status--${m.status}`}></span>
+                                        <Avatar src={m.avatarUrl || `https://ui-avatars.com/api/?name=${m.fullName}`} />
+                                        <span className={`files-status-dot files-status--online`}></span>
                                     </div>
                                     <div>
-                                        <p className="files-member-name">{m.name}</p>
-                                        <p className="files-member-role">{m.role}</p>
+                                        <p className="files-member-name">{m.fullName}</p>
+                                        <p className="files-member-role">{m.roleLevel || 'Thành viên'}</p>
                                     </div>
-                                    {m.status === 'offline' && <span className="files-offline-tag">OFFLINE</span>}
                                 </div>
                             ))}
                         </div>
                         <button className="files-invite-btn">
                             <span className="material-symbols-outlined">add</span>
-                            {t('project_detail.team.invite')}
+                            Thêm thành viên
                         </button>
-                        <p className="files-license-note">{t('project_detail.files.license')}</p>
                     </div>
 
-                    {/* Storage Usage */}
-                    <div className="files-panel">
-                        <h3 className="storage-title">{t('project_detail.files.storage_usage')}</h3>
+                    <div className="files-panel storage-panel">
+                        <h3 className="storage-title">Lưu trữ dự án</h3>
                         <div className="storage-bar">
-                            <div className="storage-fill" style={{ width: '65%' }}></div>
+                            <div className="storage-fill" style={{ width: '15%' }}></div>
                         </div>
                         <div className="storage-meta">
-                            <span>32.5 GB {t('project_detail.files.used')}</span>
-                            <span>50 GB {t('project_detail.files.total')}</span>
+                            <span>{formatSize(files.reduce((acc, f) => acc + f.size, 0))} dùng</span>
+                            <span>2 GB giới hạn</span>
                         </div>
                     </div>
                 </div>
@@ -188,3 +235,5 @@ export default function FilesTab() {
         </div>
     );
 }
+
+

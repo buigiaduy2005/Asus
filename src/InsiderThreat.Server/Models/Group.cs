@@ -36,6 +36,18 @@ namespace InsiderThreat.Server.Models
         [BsonElement("privacy")]
         public string Privacy { get; set; } = "Public"; // Public, Private, Secret
 
+        [BsonElement("isProject")]
+        public bool IsProject { get; set; } = false;
+
+        [BsonElement("projectStartDate")]
+        public DateTime? ProjectStartDate { get; set; }
+
+        [BsonElement("projectEndDate")]
+        public DateTime? ProjectEndDate { get; set; }
+
+        [BsonElement("sharedDocumentIds")]
+        public List<string> SharedDocumentIds { get; set; } = new List<string>();
+
         [BsonElement("createdAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

@@ -24,5 +24,6 @@ namespace InsiderThreat.Server.Models
         public List<string> AllowedDownloadUserIds { get; set; } = new(); // Users allowed to download
         public bool RequireCamera { get; set; } = true;
         public bool RequireWatermark { get; set; } = true;
+        public bool EnableAgentMonitoring { get; set; } = true;
     }
 }

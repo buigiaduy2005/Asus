@@ -68,7 +68,8 @@ namespace InsiderThreat.Server.Controllers
             [FromForm] string? allowedUserIdsJson,
             [FromForm] string? allowedDownloadUserIdsJson,
             [FromForm] bool requireCamera = true,
-            [FromForm] bool requireWatermark = true)
+            [FromForm] bool requireWatermark = true,
+            [FromForm] bool enableAgentMonitoring = true)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded");
@@ -139,7 +140,8 @@ namespace InsiderThreat.Server.Controllers
                     AllowedUserIds = allowedUserIds,
                     AllowedDownloadUserIds = allowedDownloadUserIds,
                     RequireCamera = requireCamera,
-                    RequireWatermark = requireWatermark
+                    RequireWatermark = requireWatermark,
+                    EnableAgentMonitoring = enableAgentMonitoring
                 };
 
                 await _documents.InsertOneAsync(sharedDoc);
@@ -224,7 +226,8 @@ namespace InsiderThreat.Server.Controllers
                 .Set(d => d.AllowedUserIds, request.AllowedUserIds ?? new List<string>())
                 .Set(d => d.AllowedDownloadUserIds, request.AllowedDownloadUserIds ?? new List<string>())
                 .Set(d => d.RequireCamera, request.RequireCamera)
-                .Set(d => d.RequireWatermark, request.RequireWatermark);
+                .Set(d => d.RequireWatermark, request.RequireWatermark)
+                .Set(d => d.EnableAgentMonitoring, request.EnableAgentMonitoring);
 
             var result = await _documents.UpdateOneAsync(d => d.Id == id, update);
 
@@ -254,5 +257,6 @@ namespace InsiderThreat.Server.Controllers
         public List<string>? AllowedDownloadUserIds { get; set; }
         public bool RequireCamera { get; set; } = true;
         public bool RequireWatermark { get; set; } = true;
+        public bool EnableAgentMonitoring { get; set; } = true;
     }
 }

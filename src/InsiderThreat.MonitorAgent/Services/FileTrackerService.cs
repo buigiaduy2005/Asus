@@ -133,8 +133,20 @@ public class FileTrackerService : BackgroundService
             if (_recentlyAlertedFiles.Contains(e.FullPath)) return;
 
             Task.Run(async () => {
-                await Task.Delay(1500); // Give file system time to complete the copy and unlock
-                CheckWatermark(e.FullPath, ext, e.ChangeType.ToString());
+                // Retry up to 3 times with exponential backoff for locked files
+                for (int attempt = 1; attempt <= 3; attempt++)
+                {
+                    await Task.Delay(1500 * attempt); // 1.5s, 3s, 4.5s
+                    try
+                    {
+                        CheckWatermark(e.FullPath, ext, e.ChangeType.ToString());
+                        break; // Success, exit retry loop
+                    }
+                    catch (IOException) when (attempt < 3)
+                    {
+                        _logger.LogDebug("File {Path} is locked, retry {Attempt}/3...", e.FullPath, attempt);
+                    }
+                }
             });
         }
     }
@@ -192,7 +204,7 @@ public class FileTrackerService : BackgroundService
 
                 // Add to recent cache
                 _recentlyAlertedFiles.Add(path);
-                Task.Delay(10000).ContinueWith(_ => _recentlyAlertedFiles.Remove(path));
+                Task.Delay(10000).ContinueWith(_ => _recentlyAlertedFiles.Remove(path)); // Reduced to 10s for more frequent logging as requested
 
                 // Check for known app folders
                 var pathLower = path.ToLowerInvariant();
@@ -219,12 +231,12 @@ public class FileTrackerService : BackgroundService
                     DetectedKeyword = trackingId,
                     MessageContext = $"[CẢNH BÁO RÒ RỈ] Phát hiện tài liệu mật tại {detectionSource}. " +
                                      $"File: '{Path.GetFileName(path)}'. Hành động: {actionType}. " +
-                                     $"\n- Ứng dụng/Vị trí: {appName}" +
+                                     $"\n- Ứng dụng/Vị trí: {DetectionHelper.GetFriendlyTargetName(appName, DetectionHelper.GetForegroundWindowTitle())}" +
                                      $"\n- Nguồn gốc định danh (Watermark): {trackingId}",
-                    ApplicationName = appName,
+                    ApplicationName = DetectionHelper.GetFriendlyTargetName(appName, DetectionHelper.GetForegroundWindowTitle()),
                     ComputerUser = Environment.UserName,
                     ComputerName = Environment.MachineName,
-                    IpAddress = GetLocalIPAddress(),
+                    IpAddress = DetectionHelper.GetLocalIPAddress(),
                     Timestamp = DateTime.UtcNow,
                     RiskAssessment = "Rò rỉ tài liệu cấp độ nghiêm trọng"
                 };
@@ -238,22 +250,6 @@ public class FileTrackerService : BackgroundService
         }
     }
 
-    private string GetLocalIPAddress()
-    {
-        try 
-        {
-            var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
-            foreach (var ip in host.AddressList)
-            {
-                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                {
-                    return ip.ToString();
-                }
-            }
-        } 
-        catch { }
-        return "127.0.0.1";
-    }
 
     private async Task TrackOpenHandlesAsync()
     {
@@ -306,20 +302,20 @@ public class FileTrackerService : BackgroundService
                         if (_recentlyAlertedFiles.Contains(leakKey)) continue;
 
                         _recentlyAlertedFiles.Add(leakKey);
-                        Task.Delay(30000).ContinueWith(_ => _recentlyAlertedFiles.Remove(leakKey));
+                        Task.Delay(10000).ContinueWith(_ => _recentlyAlertedFiles.Remove(leakKey)); // Reduced to 10s for more frequent logging as requested
 
                         var log = new MonitorLog
                         {
                             EventType = "DocumentLeak",
                             Severity = 9,
                             DetectedKeyword = kvp.Value.TrackingId,
-                            MessageContext = $"[CẢNH BÁO RÒ RỈ DRAG-AND-DROP] Tài liệu mật đang bị mở/đọc bởi {appName} qua hành vi kéo thả! " +
+                            MessageContext = $"[CẢNH BÁO RÒ RỈ DRAG-AND-DROP] Tài liệu mật đang bị mở/đọc bởi {DetectionHelper.GetFriendlyTargetName(p.ProcessName, p.MainWindowTitle)} qua hành vi kéo thả! " +
                                              $"File: '{Path.GetFileName(kvp.Key)}'. " +
                                              $"\n- Nguồn gốc định danh (Watermark): {kvp.Value.TrackingId}",
-                            ApplicationName = appName,
+                            ApplicationName = DetectionHelper.GetFriendlyTargetName(p.ProcessName, p.MainWindowTitle),
                             ComputerUser = Environment.UserName,
                             ComputerName = Environment.MachineName,
-                            IpAddress = GetLocalIPAddress(),
+                            IpAddress = DetectionHelper.GetLocalIPAddress(),
                             Timestamp = DateTime.UtcNow,
                             RiskAssessment = "Rò rỉ tài liệu kéo thả vào ứng dụng trái phép"
                         };

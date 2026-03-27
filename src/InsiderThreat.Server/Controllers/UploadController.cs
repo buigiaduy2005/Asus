@@ -18,6 +18,7 @@ namespace InsiderThreat.Server.Controllers
     {
         private readonly IGridFSBucket _gridFsBucket;
         private readonly IMongoCollection<LogEntry> _logsCollection;
+        private readonly IMongoCollection<InsiderThreat.Server.Models.SharedDocument> _documentsCollection;
         private readonly InsiderThreat.Server.Services.IWatermarkService _watermarkService;
 
         public UploadController(
@@ -27,6 +28,7 @@ namespace InsiderThreat.Server.Controllers
         {
             _gridFsBucket = gridFsBucket;
             _logsCollection = database.GetCollection<LogEntry>("Logs");
+            _documentsCollection = database.GetCollection<InsiderThreat.Server.Models.SharedDocument>("SharedDocuments");
             _watermarkService = watermarkService;
         }
 
@@ -159,9 +161,16 @@ namespace InsiderThreat.Server.Controllers
                 Stream finalStream = downloadStream;
                 if ((extension == ".docx" || extension == ".doc" || extension == ".pdf") && !string.IsNullOrEmpty(downloaderName))
                 {
-                    // Generate unique tracking ID: DownloaderName_FileId_Timestamp
-                    var trackingId = $"InsiderThreat_{downloaderName}_{fileId}_{DateTime.UtcNow:yyyyMMddHHmmss}";
-                    finalStream = _watermarkService.ApplyWatermark(downloadStream, extension, trackingId);
+                    // [ADD] Check if Agent Monitoring is enabled for this file
+                    var sharedDoc = await _documentsCollection.Find(d => d.FileId == fileId).FirstOrDefaultAsync();
+                    bool shouldTrack = sharedDoc?.EnableAgentMonitoring ?? true; // Default to true if not found in library
+
+                    if (shouldTrack)
+                    {
+                        // Generate unique tracking ID: DownloaderName_FileId_Timestamp
+                        var trackingId = $"InsiderThreat_{downloaderName}_{fileId}_{DateTime.UtcNow:yyyyMMddHHmmss}";
+                        finalStream = _watermarkService.ApplyWatermark(downloadStream, extension, trackingId);
+                    }
                 }
 
                 return File(finalStream, contentType, fileDownloadName: downloadName);

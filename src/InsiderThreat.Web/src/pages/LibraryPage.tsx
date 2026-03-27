@@ -81,6 +81,7 @@ interface SharedDocument {
     allowedDownloadUserIds?: string[];
     requireCamera?: boolean;
     requireWatermark?: boolean;
+    enableAgentMonitoring?: boolean;
 }
 
 interface UserSummary {
@@ -111,6 +112,7 @@ const LibraryPage = () => {
     const [selectedDownloadUserIds, setSelectedDownloadUserIds] = useState<string[]>([]);
     const [requireCamera, setRequireCamera] = useState(true);
     const [requireWatermark, setRequireWatermark] = useState(true);
+    const [enableAgentMonitoring, setEnableAgentMonitoring] = useState(true);
 
     const user = JSON.parse(localStorage.getItem('user') || '{}');
 
@@ -174,6 +176,7 @@ const LibraryPage = () => {
         setSelectedDownloadUserIds(doc.allowedDownloadUserIds || []);
         setRequireCamera(doc.requireCamera ?? true);
         setRequireWatermark(doc.requireWatermark ?? true);
+        setEnableAgentMonitoring(doc.enableAgentMonitoring ?? true);
         setIsEditModalVisible(true);
     };
 
@@ -187,7 +190,8 @@ const LibraryPage = () => {
                 allowedUserIds: selectedUserIds,
                 allowedDownloadUserIds: selectedDownloadUserIds,
                 requireCamera,
-                requireWatermark
+                requireWatermark,
+                enableAgentMonitoring
             });
             message.success(t('library.update_success', 'Đã cập nhật cấu hình bảo mật và quyền truy cập'));
             setIsEditModalVisible(false);
@@ -242,7 +246,8 @@ const LibraryPage = () => {
             allowedUserIdsJson: JSON.stringify(selectedUserIds),
             allowedDownloadUserIdsJson: JSON.stringify(selectedDownloadUserIds),
             requireCamera,
-            requireWatermark
+            requireWatermark,
+            enableAgentMonitoring
         },
         showFileList: false,
         onChange(info: any) {
@@ -259,6 +264,7 @@ const LibraryPage = () => {
                 setMinRole('Nhân viên');
                 setRequireCamera(true);
                 setRequireWatermark(true);
+                setEnableAgentMonitoring(true);
             } else if (status === 'error') {
                 const errorMsg = info.file.response?.message || info.file.response || t('library.unknown_error', "Lỗi không xác định");
                 message.error(t('library.upload_fail', { name: info.file.name, error: errorMsg, defaultValue: `${info.file.name} tải lên thất bại: ${errorMsg}` }));
@@ -507,6 +513,11 @@ const LibraryPage = () => {
                         <Switch checked={requireWatermark} onChange={setRequireWatermark} />
                     </div>
 
+                    <div className="upload-field" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label className="field-label" style={{ marginBottom: 0 }}>Kích hoạt Giám sát Agent (Chống copy/gửi file)</label>
+                        <Switch checked={enableAgentMonitoring} onChange={setEnableAgentMonitoring} />
+                    </div>
+
                     <div className="upload-field">
                         <label className="field-label">{t('library.field_upload', 'Tải tệp lên')}</label>
                         <Dragger {...uploadProps} className="dragger-mobile">
@@ -640,6 +651,11 @@ const LibraryPage = () => {
                     <div className="upload-field" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <label className="field-label" style={{ marginBottom: 0 }}>Kích hoạt Dynamic Watermark (Đóng dấu IP)</label>
                         <Switch checked={requireWatermark} onChange={setRequireWatermark} />
+                    </div>
+
+                    <div className="upload-field" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label className="field-label" style={{ marginBottom: 0 }}>Kích hoạt Giám sát Agent (Chống copy/gửi file)</label>
+                        <Switch checked={enableAgentMonitoring} onChange={setEnableAgentMonitoring} />
                     </div>
                 </div>
 

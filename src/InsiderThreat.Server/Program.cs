@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http.Features;
 var builder = WebApplication.CreateBuilder(args);
 
 // Cấu hình giới hạn upload file (200MB) và ép cổng WebHost
-builder.WebHost.UseUrls("http://127.0.0.1:5038");
+builder.WebHost.UseUrls("http://*:5038");
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.Limits.MaxRequestBodySize = 209715200; // 200MB

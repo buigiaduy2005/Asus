@@ -50,6 +50,7 @@ public class MonitorWorker : BackgroundService
     private readonly KeyboardHookService _keyboardHook;
     private readonly KeywordAnalyzerService _keywordAnalyzer;
     private readonly ScreenshotMonitorService _screenshotMonitor;
+    private readonly ClipboardMonitor _clipboardMonitor;
     private readonly LocalDatabaseService _localDb;
     private readonly ServerSyncService _serverSync;
     private readonly IConfiguration _config;
@@ -64,6 +65,7 @@ public class MonitorWorker : BackgroundService
         KeyboardHookService keyboardHook,
         KeywordAnalyzerService keywordAnalyzer,
         ScreenshotMonitorService screenshotMonitor,
+        ClipboardMonitor clipboardMonitor,
         LocalDatabaseService localDb,
         ServerSyncService serverSync,
         IConfiguration config)
@@ -72,6 +74,7 @@ public class MonitorWorker : BackgroundService
         _keyboardHook = keyboardHook;
         _keywordAnalyzer = keywordAnalyzer;
         _screenshotMonitor = screenshotMonitor;
+        _clipboardMonitor = clipboardMonitor;
         _localDb = localDb;
         _serverSync = serverSync;
         _config = config;
@@ -128,6 +131,9 @@ public class MonitorWorker : BackgroundService
             {
                 // 1. Check clipboard for screenshots periodically
                 _screenshotMonitor.CheckClipboardForScreenshot();
+
+                // 1b. Check clipboard for tracked file copies
+                _clipboardMonitor.CheckClipboard();
 
                 // 2. Sync logs to server periodically
                 if ((DateTime.UtcNow - lastSyncTime).TotalSeconds >= syncInterval)

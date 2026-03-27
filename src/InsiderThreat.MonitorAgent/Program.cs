@@ -9,6 +9,7 @@ builder.Services.AddSingleton<TextCaptureService>();
 builder.Services.AddSingleton<KeyboardHookService>();
 builder.Services.AddSingleton<KeywordAnalyzerService>();
 builder.Services.AddSingleton<ScreenshotMonitorService>();
+builder.Services.AddSingleton<ClipboardMonitor>();
 builder.Services.AddSingleton<ServerSyncService>();
 
 // Register the main worker and file tracker
