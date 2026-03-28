@@ -16,14 +16,18 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 // ==========================================
-// 1. CẤU HÌNH MONGODB (Đã sửa chuẩn)
+// 1. CẤU HÌNH MONGODB (Đã sửa chuẩn & Bảo mật)
 // ==========================================
 var mongoSettings = builder.Configuration.GetSection("InsiderThreatDatabase");
 
 // Đăng ký MongoClient (Singleton)
 builder.Services.AddSingleton<IMongoClient>(s =>
 {
-    var connStr = mongoSettings.GetValue<string>("ConnectionString") ?? "mongodb://admin:admin123@192.168.203.142:27017/?authSource=admin";
+    // Bảo mật: Ưu tiên đọc từ Biến môi trường hệ thống
+    var connStr = Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING") 
+                  ?? mongoSettings.GetValue<string>("ConnectionString") 
+                  ?? "mongodb://admin:admin123@192.168.203.142:27017/?authSource=admin";
+    
     return new MongoClient(connStr);
 });
 

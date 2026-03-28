@@ -1,17 +1,19 @@
 using Microsoft.Data.Sqlite;
 using InsiderThreat.MonitorAgent.Models;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace InsiderThreat.MonitorAgent.Services;
 
 /// <summary>
-/// SQLite-based local storage for monitoring logs.
-/// This ensures data is preserved even when the machine is offline.
-/// All data is stored locally and synced to the server when connectivity is restored.
+/// SQLite-based local storage for monitoring logs with AES Encryption.
+/// This ensures data is preserved even when the machine is offline and protected from local tampering.
 /// </summary>
 public class LocalDatabaseService : IDisposable
 {
     private readonly SqliteConnection _connection;
     private readonly ILogger<LocalDatabaseService> _logger;
+    private readonly string _encryptionKey = "InsiderThreat_Local_Encryption_Key_2024!"; // Nên dùng SecureStorage thực tế
 
     public LocalDatabaseService(IConfiguration config, ILogger<LocalDatabaseService> logger)
     {
@@ -69,15 +71,18 @@ public class LocalDatabaseService : IDisposable
             ";
             cmd.Parameters.AddWithValue("@EventType", log.EventType);
             cmd.Parameters.AddWithValue("@Severity", log.Severity);
-            cmd.Parameters.AddWithValue("@DetectedKeyword", (object?)log.DetectedKeyword ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("@MessageContext", (object?)log.MessageContext ?? DBNull.Value);
+            
+            // Mã hóa dữ liệu nhạy cảm
+            cmd.Parameters.AddWithValue("@DetectedKeyword", Encrypt((object?)log.DetectedKeyword?.ToString()));
+            cmd.Parameters.AddWithValue("@MessageContext", Encrypt((object?)log.MessageContext?.ToString()));
+            
             cmd.Parameters.AddWithValue("@ApplicationName", (object?)log.ApplicationName ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@WindowTitle", (object?)log.WindowTitle ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@ComputerUser", log.ComputerUser);
             cmd.Parameters.AddWithValue("@ComputerName", log.ComputerName);
             cmd.Parameters.AddWithValue("@IpAddress", log.IpAddress);
             cmd.Parameters.AddWithValue("@Timestamp", log.Timestamp.ToString("o"));
-            cmd.Parameters.AddWithValue("@RiskAssessment", (object?)log.RiskAssessment ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@RiskAssessment", Encrypt((object?)log.RiskAssessment?.ToString()));
 
             var result = cmd.ExecuteScalar();
             var id = Convert.ToInt64(result);
@@ -111,8 +116,8 @@ public class LocalDatabaseService : IDisposable
                     Id = reader.GetInt64(0),
                     EventType = reader.GetString(1),
                     Severity = reader.GetInt32(2),
-                    DetectedKeyword = reader.IsDBNull(3) ? null : reader.GetString(3),
-                    MessageContext = reader.IsDBNull(4) ? null : reader.GetString(4),
+                    DetectedKeyword = Decrypt(reader.IsDBNull(3) ? null : reader.GetString(3)),
+                    MessageContext = Decrypt(reader.IsDBNull(4) ? null : reader.GetString(4)),
                     ApplicationName = reader.IsDBNull(5) ? null : reader.GetString(5),
                     WindowTitle = reader.IsDBNull(6) ? null : reader.GetString(6),
                     ComputerUser = reader.GetString(7),
@@ -120,7 +125,7 @@ public class LocalDatabaseService : IDisposable
                     IpAddress = reader.GetString(9),
                     Timestamp = DateTime.Parse(reader.GetString(10)),
                     IsSynced = reader.GetInt32(11) == 1,
-                    RiskAssessment = reader.IsDBNull(12) ? null : reader.GetString(12)
+                    RiskAssessment = Decrypt(reader.IsDBNull(12) ? null : reader.GetString(12))
                 });
             }
         }
@@ -153,6 +158,73 @@ public class LocalDatabaseService : IDisposable
         {
             _logger.LogError(ex, "Failed to mark logs as synced");
         }
+    }
+
+    // ==========================================
+    // AES ENCRYPTION HELPERS
+    // ==========================================
+    private object Encrypt(string? plainText)
+    {
+        if (string.IsNullOrEmpty(plainText)) return DBNull.Value;
+        
+        try 
+        {
+            byte[] iv = new byte[16]; // Sử dụng IV cố định cho đơn giản trong ví dụ này
+            byte[] array;
+
+            using (Aes aes = Aes.Create())
+            {
+                // Key phải là 32 bytes (256 bits)
+                aes.Key = Encoding.UTF8.GetBytes(_encryptionKey.PadRight(32).Substring(0, 32));
+                aes.IV = iv;
+
+                ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+
+                using (MemoryStream memoryStream = new MemoryStream())
+                {
+                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
+                    {
+                        using (StreamWriter streamWriter = new StreamWriter(cryptoStream))
+                        {
+                            streamWriter.Write(plainText);
+                        }
+                        array = memoryStream.ToArray();
+                    }
+                }
+            }
+            return Convert.ToBase64String(array);
+        }
+        catch { return plainText; }
+    }
+
+    private string? Decrypt(string? cipherText)
+    {
+        if (string.IsNullOrEmpty(cipherText)) return null;
+        
+        try
+        {
+            byte[] iv = new byte[16];
+            byte[] buffer = Convert.FromBase64String(cipherText);
+
+            using (Aes aes = Aes.Create())
+            {
+                aes.Key = Encoding.UTF8.GetBytes(_encryptionKey.PadRight(32).Substring(0, 32));
+                aes.IV = iv;
+                ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+
+                using (MemoryStream memoryStream = new MemoryStream(buffer))
+                {
+                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
+                    {
+                        using (StreamReader streamReader = new StreamReader(cryptoStream))
+                        {
+                            return streamReader.ReadToEnd();
+                        }
+                    }
+                }
+            }
+        }
+        catch { return cipherText; }
     }
 
     /// <summary>

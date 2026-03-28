@@ -128,12 +128,20 @@ public class MonitorWorker : BackgroundService
         var lastSyncTime = DateTime.UtcNow;
         var lastPurgeTime = DateTime.UtcNow;
         var lastProcessScanTime = DateTime.UtcNow;
+        var lastWatchdogCheckTime = DateTime.UtcNow;
         var processCheckInterval = int.Parse(_config["AgentConfig:ProcessCheckIntervalSeconds"] ?? "60");
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
+                // 0. Circular Watchdog: Đảm bảo dịch vụ bảo vệ luôn chạy
+                if ((DateTime.UtcNow - lastWatchdogCheckTime).TotalSeconds >= 10) // Kiểm tra mỗi 10s
+                {
+                    lastWatchdogCheckTime = DateTime.UtcNow;
+                    CheckAndRestartWatchdog();
+                }
+
                 // 1. Check clipboard for screenshots periodically
                 _screenshotMonitor.CheckClipboardForScreenshot();
 
@@ -304,6 +312,48 @@ public class MonitorWorker : BackgroundService
                 await Task.Delay(2000); // Wait 2s for network to stabilize
                 await _serverSync.SyncUnsyncedLogsAsync();
             });
+        }
+    }
+
+    /// <summary>
+    /// Circular Watchdog: Kiểm tra và khởi động lại dịch vụ Watchdog nếu bị tắt.
+    /// </summary>
+    private void CheckAndRestartWatchdog()
+    {
+        const string wdProcessName = "InsiderThreat.Watchdog";
+        var processes = System.Diagnostics.Process.GetProcessesByName(wdProcessName);
+
+        if (processes.Length == 0)
+        {
+            _logger.LogWarning("🛡️ WATCHDOG ALERT: {ProcessName} is NOT running! Restarting reverse watchdog...", wdProcessName);
+            
+            // Đường dẫn giả định tới file exe của Watchdog
+            string wdPath = Path.Combine(AppContext.BaseDirectory, "..", "InsiderThreat.Watchdog", "InsiderThreat.Watchdog.exe");
+            
+            // Thử tìm trong cùng thư mục (nếu build chung) hoặc theo cấu trúc source
+            if (!File.Exists(wdPath))
+            {
+                // Fallback cho môi trường dev
+                wdPath = @"C:\InsiderThreat-System\InsiderThreat-System\src\InsiderThreat.Watchdog\bin\Debug\net8.0\InsiderThreat.Watchdog.exe";
+            }
+
+            if (File.Exists(wdPath))
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = wdPath,
+                        UseShellExecute = true,
+                        CreateNoWindow = true
+                    });
+                    _logger.LogInformation("✅ Reverse Watchdog restarted successfully.");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("❌ Failed to start watchdog: {msg}", ex.Message);
+                }
+            }
         }
     }
 

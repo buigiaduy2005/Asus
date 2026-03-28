@@ -20,6 +20,7 @@ import LibraryPage from './pages/LibraryPage';
 import SocialAttendancePage from './pages/SocialAttendancePage';
 import MeetPage from './pages/MeetPage';
 import MonitorLogsPage from './pages/MonitorLogsPage';
+import SecurityApprovalsPage from './pages/SecurityApprovalsPage';
 import { NotificationProvider } from './contexts/NotificationContext';
 import NotificationToast from './components/NotificationToast';
 import { ChatWidget } from './components/ChatWidget';
@@ -100,6 +101,7 @@ function App() {
               <Route path="/attendance" element={<PrivateRoute><SocialAttendancePage /></PrivateRoute>} />
               <Route path="/meet" element={<PrivateRoute><MeetPage /></PrivateRoute>} />
               <Route path="/monitor-logs" element={<PrivateRoute><MonitorLogsPage /></PrivateRoute>} />
+              <Route path="/security-approvals" element={<PrivateRoute><SecurityApprovalsPage /></PrivateRoute>} />
               <Route path="/" element={<RoleBasedRedirect />} />
               <Route path="*" element={<RoleBasedRedirect />} />
             </Routes>
