@@ -210,17 +210,24 @@ public class UsersController : ControllerBase
         _logger.LogInformation($"Embeddings length: {embeddings?.Length}");
 
         var filter = Builders<User>.Filter.Eq(u => u.Id, id);
-        var update = Builders<User>.Update.Set(u => u.FaceEmbeddings, embeddings);
+        var existingUser = await _usersCollection.Find(filter).FirstOrDefaultAsync();
 
-        var result = await _usersCollection.UpdateOneAsync(filter, update);
-
-        if (result.MatchedCount == 0)
+        if (existingUser == null)
         {
             _logger.LogWarning($"User not found with ID: {id}");
             return NotFound(new { Message = $"User not found with ID: {id}" });
         }
 
-        return Ok(new { Message = "Face embeddings updated successfully" });
+        if (existingUser.FaceEmbeddings != null && existingUser.FaceEmbeddings.Length > 0)
+        {
+            _logger.LogWarning($"User {id} already has face embeddings registered");
+            return BadRequest(new { Message = "Khuôn mặt đã được đăng ký. Mỗi tài khoản chỉ được đăng ký 1 khuôn mặt. Liên hệ admin để đặt lại." });
+        }
+
+        var update = Builders<User>.Update.Set(u => u.FaceEmbeddings, embeddings);
+        await _usersCollection.UpdateOneAsync(filter, update);
+
+        return Ok(new { Message = "Đăng ký khuôn mặt thành công" });
     }
 
     // PUT: api/users/{id}/face-image

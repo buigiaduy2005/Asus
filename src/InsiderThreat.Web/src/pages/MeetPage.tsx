@@ -1,9 +1,9 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Typography, Card, Input, Button, Space, message, Layout, Tag, Tooltip } from 'antd';
 import {
     VideoCameraOutlined, EnterOutlined, ApiOutlined,
     AudioOutlined, AudioMutedOutlined, DesktopOutlined,
-    PhoneOutlined, CopyOutlined, VideoCameraAddOutlined,
+    PhoneOutlined, CopyOutlined, VideoCameraAddOutlined, PushpinFilled,
 } from '@ant-design/icons';
 import { authService } from '../services/auth';
 import { useWebRTC } from '../hooks/useWebRTC';
@@ -28,6 +28,17 @@ export default function MeetPage() {
         createRoom, joinRoom, leaveRoom,
         toggleAudio, toggleVideo, toggleScreenShare,
     } = useWebRTC();
+
+    // Pin state: connectionId của peer đang được ghim (null = không ghim ai)
+    const [pinnedId, setPinnedId] = useState<string | null>(null);
+
+    // Khi peer rời phòng, bỏ pin nếu peer đó đang được ghim
+    useEffect(() => {
+        if (pinnedId) {
+            const stillExists = Array.from(peers.values()).find(p => p.connectionId === pinnedId);
+            if (!stillExists) setPinnedId(null);
+        }
+    }, [peers, peerUpdateCounter]);
 
     // Callback ref: fires when the video element mounts AND when localStream changes
     // This fixes the timing issue where useEffect([localStream]) misses because
@@ -161,32 +172,48 @@ export default function MeetPage() {
                                 </span>
                             </div>
 
-                            {/* Video Grid */}
-                            <div className={styles.videoGrid}>
-                                {/* Local Video */}
-                                <div className={styles.videoTile}>
-                                    <video
-                                        ref={localVideoRef}
-                                        autoPlay
-                                        muted
-                                        playsInline
-                                        className={styles.videoElement}
-                                    />
-                                    {!isVideoEnabled && (
-                                        <div className={styles.videoOff}>
-                                            <VideoCameraOutlined style={{ fontSize: 36, color: '#fff' }} />
+                            {/* Video Grid - nếu có pin thì layout spotlight + thumbnails */}
+                            {pinnedId ? (
+                                <div className={styles.spotlightLayout}>
+                                    {/* Pinned video - full */}
+                                    {Array.from(peers.values()).filter(p => p.connectionId === pinnedId).map(peer => (
+                                        <RemoteVideo key={peer.connectionId} peer={peer} streamId={peer.remoteStream.id}
+                                            isPinned onPin={() => setPinnedId(null)} large />
+                                    ))}
+                                    {/* Thumbnails */}
+                                    <div className={styles.thumbnailRow}>
+                                        <div className={styles.videoTile} style={{ minHeight: 100 }}>
+                                            <video ref={localVideoRef} autoPlay muted playsInline className={styles.videoElement} />
+                                            {!isVideoEnabled && <div className={styles.videoOff}><VideoCameraOutlined style={{ fontSize: 20, color: '#fff' }} /></div>}
+                                            <span className={styles.nameTag}>{user?.fullName || user?.username || t('meet.lbl_you', 'Bạn')}</span>
                                         </div>
-                                    )}
-                                    <span className={styles.nameTag}>
-                                        {user?.fullName || user?.username || t('meet.lbl_you', 'Bạn')} ({t('meet.lbl_you', 'Bạn')})
-                                    </span>
+                                        {Array.from(peers.values()).filter(p => p.connectionId !== pinnedId).map(peer => (
+                                            <RemoteVideo key={peer.connectionId} peer={peer} streamId={peer.remoteStream.id}
+                                                onPin={() => setPinnedId(peer.connectionId)} />
+                                        ))}
+                                    </div>
                                 </div>
-
-                                {/* Remote Videos */}
-                                {Array.from(peers.values()).map(peer => (
-                                    <RemoteVideo key={peer.connectionId} peer={peer} streamId={peer.remoteStream.id} />
-                                ))}
-                            </div>
+                            ) : (
+                                <div className={styles.videoGrid}>
+                                    {/* Local Video */}
+                                    <div className={styles.videoTile}>
+                                        <video ref={localVideoRef} autoPlay muted playsInline className={styles.videoElement} />
+                                        {!isVideoEnabled && (
+                                            <div className={styles.videoOff}>
+                                                <VideoCameraOutlined style={{ fontSize: 36, color: '#fff' }} />
+                                            </div>
+                                        )}
+                                        <span className={styles.nameTag}>
+                                            {user?.fullName || user?.username || t('meet.lbl_you', 'Bạn')} ({t('meet.lbl_you', 'Bạn')})
+                                        </span>
+                                    </div>
+                                    {/* Remote Videos */}
+                                    {Array.from(peers.values()).map(peer => (
+                                        <RemoteVideo key={peer.connectionId} peer={peer} streamId={peer.remoteStream.id}
+                                            onPin={() => setPinnedId(peer.connectionId)} />
+                                    ))}
+                                </div>
+                            )}
 
                             {/* Control Bar */}
                             <div className={styles.controlBar}>
@@ -245,7 +272,13 @@ export default function MeetPage() {
 }
 
 /* Remote video component - uses useEffect to update srcObject when stream changes */
-function RemoteVideo({ peer, streamId: _streamId }: { peer: { connectionId: string; displayName: string; remoteStream: MediaStream }; streamId?: string }) {
+function RemoteVideo({ peer, streamId: _streamId, onPin, isPinned, large }: {
+    peer: { connectionId: string; displayName: string; remoteStream: MediaStream };
+    streamId?: string;
+    onPin?: () => void;
+    isPinned?: boolean;
+    large?: boolean;
+}) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [, forceUpdate] = useState(0);
 
@@ -281,14 +314,24 @@ function RemoteVideo({ peer, streamId: _streamId }: { peer: { connectionId: stri
     }, [peer.remoteStream]);
 
     return (
-        <div className={styles.videoTile}>
-            <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className={styles.videoElement}
-            />
+        <div className={large ? styles.videoTileLarge : styles.videoTile}>
+            <video ref={videoRef} autoPlay playsInline className={styles.videoElement} />
             <span className={styles.nameTag}>{peer.displayName}</span>
+            {onPin && (
+                <Tooltip title={isPinned ? 'Bỏ ghim' : 'Ghim lên toàn màn hình'}>
+                    <button
+                        onClick={onPin}
+                        style={{
+                            position: 'absolute', top: 8, right: 8,
+                            background: isPinned ? '#1890ff' : 'rgba(0,0,0,0.5)',
+                            border: 'none', borderRadius: 6, padding: '4px 8px',
+                            color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+                        }}
+                    >
+                        <PushpinFilled style={{ fontSize: 14 }} />
+                    </button>
+                </Tooltip>
+            )}
         </div>
     );
 }
