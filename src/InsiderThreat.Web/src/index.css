@@ -43,6 +43,15 @@
   --color-dark-bg: #f1f5f9;
   --color-dark-surface: #ffffff;
   --color-dark-surface-lighter: #f1f5f9;
+
+  /* ===== SOCIAL / FEED PAGE ALIASES ===== */
+  --bg-primary: #f9fafb;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --bg-hover: rgba(0, 0, 0, 0.04);
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
 }
 
 /* ===== DARK THEME — ===== */
@@ -64,6 +73,15 @@
   --color-dark-bg: #121212;
   --color-dark-surface: #1E1E1E;
   --color-dark-surface-lighter: #2d2d2d;
+
+  /* ===== SOCIAL / FEED PAGE ALIASES (dark) ===== */
+  --bg-primary: #121212;
+  --bg-secondary: #1E1E1E;
+  --bg-tertiary: #2d2d2d;
+  --bg-hover: rgba(255, 255, 255, 0.06);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border-color: #333333;
 }
 
 
