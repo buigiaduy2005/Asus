@@ -149,8 +149,8 @@ public class KeyboardHookService : IDisposable
             }
 
             // Auto-flush if buffer gets too long or enough time passed
-            // Use 30 seconds and 500 chars to avoid splitting messages mid-typing
-            if (_textBuffer.Length > 500 || (DateTime.UtcNow - _lastFlushTime).TotalSeconds > 30)
+            // Use 45 seconds and 500 chars to avoid splitting messages mid-typing
+            if (_textBuffer.Length > 500 || (DateTime.UtcNow - _lastFlushTime).TotalSeconds > 45)
             {
                 FlushKeyboardBuffer();
             }
@@ -208,10 +208,21 @@ public class KeyboardHookService : IDisposable
         try
         {
             var composedText = _textCapture.CaptureTextFromFocusedElement();
-            if (!string.IsNullOrWhiteSpace(composedText) && composedText.Length >= rawBuffer.Length)
+            if (!string.IsNullOrWhiteSpace(composedText))
             {
-                finalText = composedText;
-                _logger.LogDebug("📝 UIAutomation capture succeeded for [{App}]", appName);
+                // Only trust UIAutomation if it's longer than raw buffer or substantially different 
+                // AND it doesn't just match the application name.
+                bool isAppName = string.Equals(composedText.Trim(), appName, StringComparison.OrdinalIgnoreCase);
+                
+                if (!isAppName && (composedText.Length >= rawBuffer.Length || composedText.Length > 10))
+                {
+                    finalText = composedText;
+                    _logger.LogDebug("📝 UIAutomation capture succeeded for [{App}]", appName);
+                }
+                else
+                {
+                    _logger.LogDebug("📝 UIAutomation rejected (matches AppName or too short): \"{Text}\"", composedText);
+                }
             }
         }
         catch (Exception ex)

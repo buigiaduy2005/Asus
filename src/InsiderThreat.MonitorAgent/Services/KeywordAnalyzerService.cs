@@ -255,7 +255,7 @@ public class KeywordAnalyzerService
                 Keyword = "nghỉ việc",
                 Category = "Nghỉ việc",
                 BaseSeverity = 6,
-                AmplifyPatterns = new[] { "quyết định", "chắc chắn", "tuần sau", "tháng sau", "nộp đơn", "thôi việc", "xin nghỉ" },
+                AmplifyPatterns = new[] { "quyết định", "chắc chắn", "tuần sau", "tháng sau", "nộp đơn", "thôi việc", "xin nghỉ", "phỏng vấn" },
                 AmplifyBonus = 3
             },
             new()
@@ -274,6 +274,23 @@ public class KeywordAnalyzerService
                 AmplifyPatterns = new[] { "quyết định", "chắc chắn", "nộp đơn", "chấm dứt" },
                 AmplifyBonus = 2
             },
+            // Partial word rules (lower severity unless combined)
+            new()
+            {
+                Keyword = "nghỉ",
+                Category = "Nghỉ việc",
+                BaseSeverity = 3,
+                AmplifyPatterns = new[] { "việc", "luôn", "phép", "ngang", "rồi" },
+                AmplifyBonus = 3
+            },
+            new()
+            {
+                Keyword = "nghi",
+                Category = "Nghỉ việc",
+                BaseSeverity = 2,
+                AmplifyPatterns = new[] { "viec", "luon", "phep", "ngang", "roi" },
+                AmplifyBonus = 3
+            },
             new()
             {
                 Keyword = "tìm việc",
@@ -291,13 +308,13 @@ public class KeywordAnalyzerService
                 AmplifyBonus = 2
             },
 
-            // === DỮ LIỆU DỰ ÁN ===
+            // === DỮ LIỆU DỰ ÁN & BÍ MẬT ===
             new()
             {
-                Keyword = "hợp đồng dự án",
+                Keyword = "hợp đồng",
                 Category = "Dữ liệu dự án",
-                BaseSeverity = 5,
-                AmplifyPatterns = new[] { "gửi", "copy", "chụp", "sao chép", "download", "bên ngoài", "đối tác" },
+                BaseSeverity = 4,
+                AmplifyPatterns = new[] { "gửi", "copy", "chụp", "sao chép", "download", "bên ngoài", "đối tác", "bí mật" },
                 AmplifyBonus = 3
             },
             new()
@@ -310,10 +327,26 @@ public class KeywordAnalyzerService
             },
             new()
             {
+                Keyword = "source code",
+                Category = "Dữ liệu dự án",
+                BaseSeverity = 6,
+                AmplifyPatterns = new[] { "send", "copy", "github", "drive", "upload", "external" },
+                AmplifyBonus = 3
+            },
+            new()
+            {
                 Keyword = "khách hàng",
                 Category = "Dữ liệu dự án",
                 BaseSeverity = 4,
                 AmplifyPatterns = new[] { "danh sách", "thông tin", "email", "số điện thoại", "gửi cho", "bên ngoài" },
+                AmplifyBonus = 3
+            },
+            new()
+            {
+                Keyword = "bí mật",
+                Category = "An ninh",
+                BaseSeverity = 5,
+                AmplifyPatterns = new[] { "công ty", "dự án", "nội bộ", "không được nói", "giữ kín", "đừng kể" },
                 AmplifyBonus = 3
             },
 
@@ -354,14 +387,6 @@ public class KeywordAnalyzerService
             // === CÁC TỪ KHÓA BỔ SUNG ===
             new()
             {
-                Keyword = "bí mật",
-                Category = "An ninh",
-                BaseSeverity = 5,
-                AmplifyPatterns = new[] { "công ty", "dự án", "nội bộ", "không được nói", "giữ kín" },
-                AmplifyBonus = 3
-            },
-            new()
-            {
                 Keyword = "rò rỉ",
                 Category = "An ninh",
                 BaseSeverity = 7,
@@ -374,14 +399,6 @@ public class KeywordAnalyzerService
                 Category = "Nghỉ việc",
                 BaseSeverity = 5,
                 AmplifyPatterns = new[] { "gửi", "cập nhật", "linkedin", "apply", "ứng tuyển", "curriculum vitae" },
-                AmplifyBonus = 2
-            },
-            new()
-            {
-                Keyword = "công việc mới",
-                Category = "Nghỉ việc",
-                BaseSeverity = 6,
-                AmplifyPatterns = new[] { "tìm", "phỏng vấn", "offer", "thử việc" },
                 AmplifyBonus = 2
             },
             new()

@@ -316,9 +316,11 @@ public class TextCaptureService
         var trimmed = text.Trim();
         if (trimmed.Length < 2) return false;
 
-        // Reject if the captured text is just the application name.
-        // Some Electron apps (like Zalo) might return their name as the Value of the container element.
+        // Reject if the captured text is just the application name or common generic UI labels.
         if (IsInternalAppName(trimmed)) return false;
+
+        // Reject very long strings that might be entire document contents if not expected
+        if (trimmed.Length > 10000) return false;
 
         return true;
     }
@@ -326,9 +328,14 @@ public class TextCaptureService
     private bool IsInternalAppName(string name)
     {
         var lower = name.ToLowerInvariant();
-        return lower == "zalo" || lower == "facebook" || lower == "messenger" || 
-               lower == "chrome" || lower == "google chrome" || lower == "microsoft edge" ||
-               lower == "telegram" || lower == "desktop" || lower == "mặc định";
+        var commonApps = new[] 
+        { 
+            "zalo", "facebook", "messenger", "chrome", "google chrome", "microsoft edge", 
+            "telegram", "desktop", "mặc định", "system", "windows", "taskbar", 
+            "start", "viber", "skype", "whatsapp", "discord", "teams", "outlook"
+        };
+
+        return commonApps.Any(app => lower == app || lower.Contains("search") && lower.Contains("tiktok"));
     }
 
     /// <summary>
