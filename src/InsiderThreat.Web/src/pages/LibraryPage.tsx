@@ -162,8 +162,35 @@ const LibraryPage = () => {
         preloadPhoneDetectorModel();
     }, []);
 
-    const handleDownload = (doc: SharedDocument) => {
-        window.open(`${API_BASE_URL}/api/DocumentLibrary/download/${doc.fileId}`, '_blank');
+    const handleDownload = async (doc: SharedDocument) => {
+        try {
+            message.loading({ content: t('library.downloading', 'Đang chuẩn bị tải xuống...'), key: 'downloading' });
+            const response = await fetch(`${API_BASE_URL}/api/DocumentLibrary/download/${doc.fileId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Download failed');
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = doc.fileName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            message.success({ content: t('library.download_success', 'Tải xuống thành công!'), key: 'downloading', duration: 2 });
+        } catch (error) {
+            console.error('Download error:', error);
+            message.error({ content: t('library.download_fail', 'Lỗi khi tải xuống tài liệu.'), key: 'downloading', duration: 2 });
+        }
     };
 
     const handlePreview = (doc: SharedDocument) => {
