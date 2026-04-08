@@ -14,56 +14,49 @@ namespace InsiderThreat.MonitorAgent.Services
             var pLower = processName.ToLowerInvariant();
             var tLower = (windowTitle ?? "").ToLowerInvariant();
 
-            // 1. Browsers - Detailed website detection
-            if (pLower.Contains("chrome") || pLower.Contains("msedge") || pLower.Contains("firefox") || pLower.Contains("opera") || pLower.Contains("brave"))
+            // 1. Explicit UI/Host Frameworks (UWP, Electron, etc.)
+            if (pLower.Contains("applicationframehost") || pLower.Contains("wwahost") || pLower.Contains("electron"))
             {
-                if (tLower.Contains("zalo")) return "Zalo (Web)";
-                if (tLower.Contains("facebook")) return "Facebook (Web)";
-                if (tLower.Contains("messenger")) return "Messenger (Web)";
+                if (tLower.Contains("zalo")) return "Zalo Desktop";
+                if (tLower.Contains("telegram")) return "Telegram Desktop";
+                if (tLower.Contains("messenger")) return "Messenger Desktop";
+                if (tLower.Contains("skype")) return "Skype Desktop";
+                if (tLower.Contains("viber")) return "Viber Desktop";
+                if (tLower.Contains("discord")) return "Discord";
+            }
+
+            // 2. Chat Apps - Desktop versions (Check process first, then title)
+            if (pLower.Contains("zalo") || tLower.Contains("zalo")) return "Zalo Desktop";
+            if (pLower.Contains("telegram") || tLower.Contains("telegram")) return "Telegram Desktop";
+            if (pLower.Contains("skype") || tLower.Contains("skype")) return "Skype Desktop";
+            if (pLower.Contains("viber") || tLower.Contains("viber")) return "Viber Desktop";
+            if (pLower.Contains("discord") || tLower.Contains("discord")) return "Discord App";
+            if (pLower.Contains("slack") || tLower.Contains("slack")) return "Slack Desktop";
+            if (pLower.Contains("messenger") || tLower.Contains("messenger")) return "Messenger Desktop";
+
+            // 3. Browsers - Detailed website detection
+            if (pLower.Contains("chrome") || pLower.Contains("msedge") || pLower.Contains("firefox") || pLower.Contains("opera") || pLower.Contains("brave") || pLower.Contains("coccoc"))
+            {
                 if (tLower.Contains("gmail") || tLower.Contains("mail.google")) return "Gmail";
                 if (tLower.Contains("outlook") || tLower.Contains("live.com")) return "Outlook (Web)";
-                if (tLower.Contains("telegram")) return "Telegram (Web)";
                 if (tLower.Contains("drive.google")) return "Google Drive";
                 if (tLower.Contains("dropbox")) return "Dropbox (Web)";
                 if (tLower.Contains("github")) return "GitHub";
                 if (tLower.Contains("chatgpt") || tLower.Contains("openai")) return "ChatGPT";
-                if (tLower.Contains("slack")) return "Slack (Web)";
                 
-                // Extract possible domain/site from title
-                // Title format usually: "Site Name - App Name" or "Page Title - Site Name - Browser"
-                var parts = windowTitle?.Split(new[] { " - ", " – ", " | " }, StringSplitOptions.RemoveEmptyEntries);
-                if (parts != null && parts.Length > 1)
-                {
-                    // Usually the last part is the browser, the one before it might be the site
-                    for (int i = parts.Length - 2; i >= 0; i--)
-                    {
-                        var candidate = parts[i].Trim();
-                        if (candidate.Length > 3) return $"{candidate} (Web)";
-                    }
-                }
-                
-                return $"{processName} ({windowTitle})";
+                return $"Trình duyệt ({processName})";
             }
 
-            // 2. Chat Apps - Desktop versions
-            if (pLower.Contains("zalo")) return "Zalo Desktop";
-            if (pLower.Contains("telegram")) return "Telegram Desktop";
-            if (pLower.Contains("skype")) return "Skype Desktop";
-            if (pLower.Contains("viber")) return "Viber Desktop";
-            if (pLower.Contains("discord")) return "Discord App";
-            if (pLower.Contains("slack")) return "Slack Desktop";
-            if (pLower.Contains("messenger")) return "Messenger Desktop";
-
-            // 3. Cloud/Storage
+            // 4. Cloud/Storage
             if (pLower.Contains("onedrive")) return "OneDrive";
             if (pLower.Contains("dropbox")) return "Dropbox Desktop";
             if (pLower.Contains("googledrivesync")) return "Google Drive Sync";
 
-            // 4. Email clients
+            // 5. Email clients
             if (pLower.Contains("outlook")) return "Microsoft Outlook";
             if (pLower.Contains("thunderbird")) return "Thunderbird";
 
-            // 5. File managers / Transfer
+            // 6. File managers / Transfer
             if (pLower.Contains("explorer")) return "Windows Explorer";
             if (pLower.Contains("filezilla")) return "FileZilla (FTP)";
             if (pLower.Contains("totalcmd")) return "Total Commander";
